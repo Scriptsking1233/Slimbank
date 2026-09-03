@@ -9,7 +9,9 @@
   var CFG = window.SLIM_SUPABASE || {};
   var KU = "slimbank_users_v3";
   var KS = "slimbank_session_v3";
-  var AUTH_DOMAIN = "@slimbank.local";
+  /* Supabase Auth проверяет вид адреса, поэтому держим несколько вариантов */
+  var AUTH_DOMAINS = (window.SLIM_SUPABASE && window.SLIM_SUPABASE.authDomains) ||
+    ["@slimbank.app", "@slim-bank.email", "@slimbank.local"];
 
   var api = {
     online: false,
@@ -177,22 +179,51 @@
   }
 
   /* ---------- регистрация / вход ---------- */
-  function authEmail(id) { return digits(id) + AUTH_DOMAIN; }
+  function authEmail(id, idx) { return digits(id) + AUTH_DOMAINS[idx || 0]; }
 
+  function isEmailRejected(msg) {
+    return /invalid|email_address_invalid|not authorized|unable to validate/i.test(String(msg || ""));
+  }
+
+  function shortErr(msg) {
+    var m = String(msg || "");
+    if (/already/i.test(m)) return "\u0442\u0430\u043a\u043e\u0439 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0435\u0441\u0442\u044c";
+    if (/confirm/i.test(m)) return "\u043d\u0443\u0436\u043d\u043e \u0432\u044b\u043a\u043b. Confirm email";
+    if (/signup|disabled|not allowed/i.test(m)) return "\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044f \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u0430";
+    if (/password/i.test(m)) return "\u043f\u0430\u0440\u043e\u043b\u044c \u043a\u043e\u0440\u043e\u0442\u043a\u0438\u0439";
+    if (/api key|apikey|jwt/i.test(m)) return "\u043a\u043b\u044e\u0447 \u043d\u0435 \u043f\u043e\u0434\u0445\u043e\u0434\u0438\u0442";
+    if (isEmailRejected(m)) return "\u0430\u0434\u0440\u0435\u0441 \u043e\u0442\u043a\u043b\u043e\u043d\u0451\u043d";
+    return m.slice(0, 40);
+  }
+
+  /* регистрация: пробуем домены по очереди, пока Auth не примет адрес */
   api.signUp = function (u) {
     var id = digits(u.id || u.phone);
     var pass = String(u.pass || "");
-    if (id.length < 5 || pass.length < 6) return Promise.resolve({ ok: false, error: "weak" });
-    return sb.auth
-      .signUp({ email: authEmail(id), password: pass })
-      .then(function (r) {
+    if (id.length < 5) return Promise.resolve({ ok: false, error: "no_id" });
+    if (pass.length < 6) {
+      badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u0430\u0440\u043e\u043b\u044c \u043a\u043e\u0440\u043e\u0447\u0435 6 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432", "off");
+      return Promise.resolve({ ok: false, error: "weak" });
+    }
+
+    function attempt(idx) {
+      if (idx >= AUTH_DOMAINS.length) return Promise.resolve({ ok: false, error: "email_rejected" });
+      var mail = authEmail(id, idx);
+      return sb.auth.signUp({ email: mail, password: pass }).then(function (r) {
         if (r.error) {
-          if (/already/i.test(r.error.message)) return api.signIn(id, pass);
-          return { ok: false, error: r.error.message };
+          var msg = r.error.message || "";
+          if (/already/i.test(msg)) return api.signIn(id, pass);
+          if (isEmailRejected(msg)) return attempt(idx + 1);
+          badge("\u0421\u0435\u0440\u0432\u0435\u0440: " + shortErr(msg), "off");
+          return { ok: false, error: msg };
         }
+        api.domainIdx = idx;
         if (!r.data.session) {
-          return sb.auth.signInWithPassword({ email: authEmail(id), password: pass }).then(function (r2) {
-            if (r2.error) return { ok: false, error: "confirm_email" };
+          return sb.auth.signInWithPassword({ email: mail, password: pass }).then(function (r2) {
+            if (r2.error) {
+              badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0432\u044b\u043a\u043b. Confirm email", "off");
+              return { ok: false, error: "confirm_email" };
+            }
             api.uid = r2.data.user.id;
             api.online = true;
             api.loginId = id;
@@ -205,20 +236,40 @@
         badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0441\u043e\u0437\u0434\u0430\u043d", "ok");
         return api.push(u).then(function () { return { ok: true }; });
       });
+    }
+
+    badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0441\u043e\u0437\u0434\u0430\u0451\u043c \u0430\u043a\u043a\u0430\u0443\u043d\u0442...", "warn");
+    return attempt(0);
   };
 
+  /* вход: берём login_id с сервера и пробуем все домены */
   api.signIn = function (login, pass) {
-    return sb.rpc("find_login", { p_login: String(login || "") }).then(function (r) {
-      var mail = r && !r.error && r.data ? r.data : authEmail(login);
-      return sb.auth.signInWithPassword({ email: mail, password: String(pass || "") }).then(function (r2) {
-        if (r2.error) return { ok: false, error: r2.error.message };
-        api.uid = r2.data.user.id;
-        api.online = true;
-        return api.pull().then(function (u) {
-          return { ok: true, user: u };
-        });
+    return sb
+      .rpc("find_login", { p_login: String(login || "") })
+      .then(function (r) {
+        var base = digits(login);
+        if (r && !r.error && r.data) base = String(r.data).split("@")[0];
+        return base;
+      })
+      .catch(function () { return digits(login); })
+      .then(function (base) {
+        function attempt(idx) {
+          if (idx >= AUTH_DOMAINS.length) {
+            badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0432\u0445\u043e\u0434", "off");
+            return { ok: false, error: "not_found" };
+          }
+          return sb.auth
+            .signInWithPassword({ email: base + AUTH_DOMAINS[idx], password: String(pass || "") })
+            .then(function (r2) {
+              if (r2.error) return attempt(idx + 1);
+              api.uid = r2.data.user.id;
+              api.online = true;
+              api.domainIdx = idx;
+              return api.pull().then(function (u) { return { ok: true, user: u }; });
+            });
+        }
+        return attempt(0);
       });
-    });
   };
 
   api.signOut = function () {
@@ -419,3 +470,4 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
   else wire();
 })();
+        
