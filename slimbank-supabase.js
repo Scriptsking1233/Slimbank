@@ -36,6 +36,10 @@
     if (!CFG.debug) return;
     try { console.log.apply(console, ["[slim]"].concat([].slice.call(arguments))); } catch (e) {}
   }
+  function stamp() {
+    var d = new Date(), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+  }
   function getToken() {
     if (api.token) return api.token;
     try { api.token = localStorage.getItem(KT) || null; } catch (e) {}
@@ -148,7 +152,8 @@
       api.online = true;
       if (res.override) applyOverride(res.balance);
       if (res.dropped && res.dropped.length) dropNames(res.dropped);
-      badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e", "ok");
+      api.lastOk = Date.now();
+      badge("\u0421\u0438\u043d\u0445\u0440\u043e\u043d \u0432 " + stamp(), "ok");
       return true;
     });
   };
@@ -332,19 +337,55 @@
     timer = setTimeout(function () { timer = null; syncNow(force); }, 1200);
   }
   function syncNow(force) {
-    if (!getToken()) return;
-    var map = readUsers();
-    var u = map[api.loginId] || map[Object.keys(map)[0]];
-    if (!u) return;
-    var j = JSON.stringify(u);
+    if (!getToken()) { ensureSession(); return; }
+    var cur = currentUser();
+    if (!cur) return;
+    api.loginId = cur.id;
+    var j = JSON.stringify(cur.u);
     if (!force && j === lastJson) return;
     lastJson = j;
-    api.push(u);
+    api.lastTry = Date.now();
+    api.push(cur.u);
   }
   api.syncNow = syncNow;
-  setInterval(function () { syncNow(false); }, 20000);
+
+  /* ---------- session watchdog: a token must always exist ---------- */
+  var sesBusy = false, sesAt = 0;
+  function ensureSession() {
+    if (getToken() || sesBusy) return;
+    var cur = currentUser();
+    if (!cur) return;
+    var now = Date.now();
+    if (now - sesAt < 12000) return;
+    sesAt = now;
+    sesBusy = true;
+    badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u0440\u0438\u0432\u044f\u0437\u044b\u0432\u0430\u0435\u043c \u0441\u0447\u0451\u0442...", "warn");
+    api.signIn(cur.id, String(cur.u.pass || "")).then(function (r) {
+      sesBusy = false;
+      if (r && r.ok) {
+        api.loginId = cur.id;
+        lastJson = "";
+        syncNow(true);
+      } else if (r && r.error === "bad_pass") {
+        api.error = "bad_pass";
+        badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u0430\u0440\u043e\u043b\u044c \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442", "err");
+      }
+    }).catch(function () { sesBusy = false; });
+  }
+  api.ensureSession = ensureSession;
+
+  /* ---------- watchdog: push local changes however the game saves them ---------- */
+  var forcedAt = 0;
+  setInterval(function () {
+    if (!getToken()) { ensureSession(); return; }
+    var now = Date.now();
+    if (now - forcedAt > 30000) { forcedAt = now; syncNow(true); return; }
+    syncNow(false);
+  }, 5000);
+
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "hidden") syncNow(true);
+    else { lastJson = ""; syncNow(true); }
   });
   window.addEventListener("beforeunload", function () { syncNow(true); });
 
@@ -418,6 +459,7 @@
       "\u043b\u043e\u0433\u0438\u043d: " + (api.loginId || "-"),
       "\u043e\u0448\u0438\u0431\u043a\u0430: " + (api.error || "-")
     ];
+    lines.push("push: " + (api.lastOk ? new Date(api.lastOk).toLocaleTimeString() : "-"));
     if (getToken()) { syncNow(true); lines.push("\u2192 \u0431\u0430\u043b\u0430\u043d\u0441 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440"); }
     else { api.adoptLocal(); lines.push("\u2192 \u043f\u0440\u043e\u0431\u0443\u044e \u0437\u0430\u0432\u0435\u0441\u0442\u0438 \u0430\u043a\u043a\u0430\u0443\u043d\u0442"); }
     try { alert(lines.join("\n")); } catch (err) {}
