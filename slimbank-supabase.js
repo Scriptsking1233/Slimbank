@@ -5,14 +5,14 @@
  * ===================================================================== */
 (function () {
   "use strict";
-
+​
   var CFG = window.SLIM_SUPABASE || {};
   var KU = "slimbank_users_v3";
   var KS = "slimbank_session_v3";
   /* Supabase Auth проверяет вид адреса, поэтому держим несколько вариантов */
   var AUTH_DOMAINS = (window.SLIM_SUPABASE && window.SLIM_SUPABASE.authDomains) ||
     ["@slimbank.app", "@slim-bank.email", "@slimbank.local"];
-
+​
   var api = {
     online: false,
     ready: false,
@@ -21,7 +21,7 @@
     error: null
   };
   window.SlimServer = api;
-
+​
   /* ---------- маленькие утилиты ---------- */
   function digits(s) { return String(s == null ? "" : s).replace(/\D/g, ""); }
   function readUsers() {
@@ -37,7 +37,7 @@
     if (!CFG.debug) return;
     try { console.log.apply(console, ["[slim-server]"].concat([].slice.call(arguments))); } catch (e) {}
   }
-
+​
   /* ---------- индикатор состояния ---------- */
   var pill = null;
   function badge(text, kind) {
@@ -65,7 +65,7 @@
       pill.style.boxShadow = kind === "ok" ? "0 0 0 4px rgba(49,208,170,.12)" : "none";
     } catch (e) {}
   }
-
+​
   /* ---------- нет конфига = офлайн-режим ---------- */
   if (!CFG.url || !CFG.anonKey || String(CFG.url).indexOf("http") !== 0) {
     api.error = "no_config";
@@ -81,12 +81,12 @@
     });
     return;
   }
-
+​
   var sb = window.supabase.createClient(CFG.url, CFG.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
   api.client = sb;
-
+​
   /* ---------- профиль: сервер <-> localStorage ---------- */
   function userToRow(u) {
     var state = {};
@@ -105,7 +105,7 @@
       state: state
     };
   }
-
+​
   function rowToUser(row) {
     var u = row.state && typeof row.state === "object" ? row.state : {};
     u.id = u.id || row.login_id;
@@ -121,7 +121,7 @@
     if (row.username) u.username = row.username;
     return u;
   }
-
+​
   function saveLocal(u, makeSession) {
     var map = readUsers();
     map[u.id] = u;
@@ -130,7 +130,7 @@
       try { localStorage.setItem(KS, u.id); } catch (e) {}
     }
   }
-
+​
   /* забрать свой профиль с сервера */
   api.pull = function (opts) {
     opts = opts || {};
@@ -148,7 +148,7 @@
         return u;
       });
   };
-
+​
   /* отправить свой профиль на сервер */
   api.push = function (u) {
     if (!api.uid || !u) return Promise.resolve(false);
@@ -163,7 +163,7 @@
         return true;
       });
   };
-
+​
   /* отложенная синхронизация (не чаще раза в 1.5 с) */
   var syncTimer = null;
   var pendingId = null;
@@ -177,14 +177,14 @@
       if (u) api.push(u);
     }, 1500);
   }
-
+​
   /* ---------- регистрация / вход ---------- */
   function authEmail(id, idx) { return digits(id) + AUTH_DOMAINS[idx || 0]; }
-
+​
   function isEmailRejected(msg) {
     return /invalid|email_address_invalid|not authorized|unable to validate/i.test(String(msg || ""));
   }
-
+​
   function shortErr(msg) {
     var m = String(msg || "");
     if (/already/i.test(m)) return "\u0442\u0430\u043a\u043e\u0439 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0435\u0441\u0442\u044c";
@@ -195,7 +195,7 @@
     if (isEmailRejected(m)) return "\u0430\u0434\u0440\u0435\u0441 \u043e\u0442\u043a\u043b\u043e\u043d\u0451\u043d";
     return m.slice(0, 40);
   }
-
+​
   /* регистрация: пробуем домены по очереди, пока Auth не примет адрес */
   api.signUp = function (u) {
     var id = digits(u.id || u.phone);
@@ -205,7 +205,7 @@
       badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u0430\u0440\u043e\u043b\u044c \u043a\u043e\u0440\u043e\u0447\u0435 6 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432", "off");
       return Promise.resolve({ ok: false, error: "weak" });
     }
-
+​
     function attempt(idx) {
       if (idx >= AUTH_DOMAINS.length) return Promise.resolve({ ok: false, error: "email_rejected" });
       var mail = authEmail(id, idx);
@@ -237,11 +237,11 @@
         return api.push(u).then(function () { return { ok: true }; });
       });
     }
-
+​
     badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0441\u043e\u0437\u0434\u0430\u0451\u043c \u0430\u043a\u043a\u0430\u0443\u043d\u0442...", "warn");
     return attempt(0);
   };
-
+​
   /* вход: берём login_id с сервера и пробуем все домены */
   api.signIn = function (login, pass) {
     return sb
@@ -255,7 +255,14 @@
       .then(function (base) {
         function attempt(idx) {
           if (idx >= AUTH_DOMAINS.length) {
-            badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0432\u0445\u043e\u0434", "off");
+            /* аккаунта на сервере нет — перенесём туда локальный, если пароль совпадает */
+            var mapL = readUsers();
+            var uL = mapL[digits(login)] || mapL[base];
+            if (uL && String(uL.pass || "") === String(pass || "") && CFG.autoRegister !== false) {
+              api.loginId = uL.id;
+              return api.signUp(uL);
+            }
+            badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u043b\u043e\u0433\u0438\u043d \u0438\u043b\u0438 \u043f\u0430\u0440\u043e\u043b\u044c", "off");
             return { ok: false, error: "not_found" };
           }
           return sb.auth
@@ -271,7 +278,7 @@
         return attempt(0);
       });
   };
-
+​
   api.signOut = function () {
     return sb.auth.signOut().then(function () {
       api.uid = null;
@@ -279,7 +286,7 @@
       badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0432\u044b\u0445\u043e\u0434", "off");
     });
   };
-
+​
   /* ---------- общие данные: юзернеймы, топ, промокоды, начисления ---------- */
   api.usernameFree = function (name) {
     return sb.rpc("username_free", { p_name: String(name || "") }).then(function (r) {
@@ -306,7 +313,7 @@
       return r.error ? { ok: false, error: r.error.message } : r.data;
     });
   };
-
+​
   /* ---------- перехват записи в localStorage -> автосинк ---------- */
   var rawSet = localStorage.setItem.bind(localStorage);
   try {
@@ -332,7 +339,7 @@
       } catch (e) { log("hook error", e.message); }
     };
   } catch (e) { log("cannot hook localStorage"); }
-
+​
   /* ---------- перехват формы входа: сначала сервер, потом сайт ---------- */
   document.addEventListener(
     "submit",
@@ -340,20 +347,20 @@
       var f = e.target;
       if (!f || f.id !== "loginForm") return;
       if (f.dataset.slimBypass === "1") { f.dataset.slimBypass = ""; return; }
-
+​
       var idEl = document.getElementById("loginId");
       var passEl = document.getElementById("loginPass");
       var login = idEl ? idEl.value : "";
       var pass = passEl ? passEl.value : "";
       var map = readUsers();
       var known = !!map[digits(login)];
-
+​
       if (known && !navigator.onLine) return;   /* офлайн - пусть работает локально */
-
+​
       e.preventDefault();
       e.stopPropagation();
       badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430...", "warn");
-
+​
       api.signIn(login, pass)
         .then(function (res) {
           if (res && res.ok) badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043e\u043d\u043b\u0430\u0439\u043d", "ok");
@@ -367,7 +374,66 @@
     },
     true
   );
-
+​
+  /* ---------- подхват уже вошедшего локального аккаунта ---------- */
+  api.adoptLocal = function () {
+    if (api.uid || CFG.autoRegister === false) return Promise.resolve(null);
+    var map = readUsers();
+    var sid = null;
+    try { sid = localStorage.getItem(KS); } catch (e) {}
+    var ids = Object.keys(map);
+    var id = sid && map[sid] ? sid : ids[ids.length - 1];
+    var u = id ? map[id] : null;
+    if (!u || !u.pass || String(u.pass).length < 6) return Promise.resolve(null);
+    api.loginId = id;
+    return api.signUp(u).then(function (res) {
+      if (res && res.ok) {
+        badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043e\u043d\u043b\u0430\u0439\u043d", "ok");
+        return api.push(map[id] || u);
+      }
+      return null;
+    }).catch(function () { return null; });
+  };
+​
+  /* ---------- регулярный синк баланса (не полагаемся только на записи) ---------- */
+  var lastJson = "";
+  function syncNow(force) {
+    if (!api.uid) return;
+    var map = readUsers();
+    var u = map[api.loginId] || map[Object.keys(map)[0]];
+    if (!u) return;
+    var j = JSON.stringify([u.balance, u.savings, u.plan, u.username, u.biz, u.realty, u.holdings, u.gifts, u.score]);
+    if (!force && j === lastJson) return;
+    lastJson = j;
+    api.push(u);
+  }
+  api.syncNow = syncNow;
+  setInterval(function () { syncNow(false); }, 25000);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") syncNow(true);
+  });
+​
+  /* ---------- клик по индикатору = диагностика ---------- */
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    while (t && t.id !== "slimSrvPill") t = t.parentElement;
+    if (!t) return;
+    var lines = [
+      "\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435: " + (api.online ? "online" : "offline"),
+      "uid: " + (api.uid || "-"),
+      "login: " + (api.loginId || "-"),
+      "error: " + (api.error || "-")
+    ];
+    if (api.uid) {
+      syncNow(true);
+      lines.push("\u2192 \u043e\u0442\u043f\u0440\u0430\u0432\u0438\u043b \u0431\u0430\u043b\u0430\u043d\u0441 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440");
+    } else {
+      api.adoptLocal();
+      lines.push("\u2192 \u043f\u0440\u043e\u0431\u0443\u044e \u0437\u0430\u0432\u0435\u0441\u0442\u0438 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0435");
+    }
+    try { alert(lines.join("\n")); } catch (err) {}
+  }, false);
+​
   /* ---------- старт: есть сессия -> подтянуть профиль и начисления ---------- */
   function boot() {
     badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435...", "warn");
@@ -376,7 +442,10 @@
       .then(function (r) {
         var s = r && r.data ? r.data.session : null;
         api.ready = true;
-        if (!s) { badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0433\u043e\u0442\u043e\u0432 \u043a \u0432\u0445\u043e\u0434\u0443", "warn"); return null; }
+        if (!s) {
+          badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u0433\u043e\u0442\u043e\u0432 \u043a \u0432\u0445\u043e\u0434\u0443", "warn");
+          return api.adoptLocal();
+        }
         api.uid = s.user.id;
         api.online = true;
         return (CFG.serverAccruals === false ? Promise.resolve(null) : api.claimAccruals())
@@ -392,10 +461,10 @@
         badge("\u0421\u0435\u0440\u0432\u0435\u0440: \u043e\u0444\u043b\u0430\u0439\u043d", "off");
       });
   }
-
+​
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
-
+​
   /* сохранить при закрытии вкладки */
   window.addEventListener("beforeunload", function () {
     if (!api.uid || !syncTimer) return;
@@ -405,7 +474,7 @@
     if (u) api.push(u);
   });
 })();
-
+​
 /* =====================================================================
  * Связка с интерфейсом сайта: промокоды и юзернеймы через сервер
  * ===================================================================== */
@@ -414,18 +483,18 @@
   var CFG = window.SLIM_SUPABASE || {};
   var srv = window.SlimServer;
   if (!srv || !srv.client) return;
-
+​
   function hint(text, kind) {
     var el = document.getElementById("pmHint");
     if (!el) return;
     el.textContent = text;
     el.style.color = kind === "ok" ? "#31d0aa" : kind === "err" ? "#ff6b7d" : "";
   }
-
+​
   function wire() {
     var hooks = window.SLIM_HOOKS;
     if (!hooks) return setTimeout(wire, 500);
-
+​
     /* промокоды: сервер решает, сколько начислить и не был ли код уже использован */
     if (CFG.serverPromos !== false) {
       hooks.promoServer = function (raw) {
@@ -452,22 +521,58 @@
         return true;
       };
     }
-
+​
     /* свободен ли юзернейм — проверка по общей базе всех игроков */
     hooks.usernameCheck = function (name) { return srv.usernameFree(name); };
-
-    var save = document.getElementById("unSave");
-    if (save && !save.dataset.slimWired) {
-      save.dataset.slimWired = "1";
-      save.addEventListener("click", function () {
-        var inp = document.getElementById("unInput");
-        if (!inp || !srv.online) return;
-        setTimeout(function () { srv.claimUsername(inp.value || ""); }, 400);
-      });
+​
+    /* жёсткая бронь: клик по «Занять» перехватываем и спрашиваем сервер */
+    if (!document.body.dataset.slimUnWired) {
+      document.body.dataset.slimUnWired = "1";
+      document.addEventListener(
+        "click",
+        function (e) {
+          var btn = e.target;
+          while (btn && btn.id !== "unSave") btn = btn.parentElement;
+          if (!btn) return;
+          if (btn.dataset.slimPass === "1") { btn.dataset.slimPass = ""; return; }
+          if (!srv.online) return;
+​
+          var inp = document.getElementById("unInput");
+          var name = inp ? String(inp.value || "").replace(/^@/, "").trim() : "";
+          if (!name) return;
+​
+          e.preventDefault();
+          e.stopPropagation();
+​
+          var un = document.getElementById("unHint");
+          if (un) { un.textContent = "\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u043c \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440\u0435..."; un.style.color = ""; }
+​
+          srv.claimUsername(name).then(function (r) {
+            if (r && r.ok) {
+              if (un) { un.textContent = "\u042e\u0437\u0435\u0440\u043d\u0435\u0439\u043c \u0437\u0430\u043a\u0440\u0435\u043f\u043b\u0451\u043d \u0437\u0430 \u0432\u0430\u043c\u0438"; un.style.color = "#31d0aa"; }
+              btn.dataset.slimPass = "1";
+              btn.click();
+              setTimeout(function () { srv.syncNow && srv.syncNow(true); }, 600);
+            } else {
+              var err = r && r.error;
+              if (un) {
+                un.textContent =
+                  err === "taken" ? "\u0423\u0436\u0435 \u0437\u0430\u043d\u044f\u0442 \u0434\u0440\u0443\u0433\u0438\u043c \u0438\u0433\u0440\u043e\u043a\u043e\u043c" :
+                  err === "bad_format" ? "4\u201320 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432: \u0431\u0443\u043a\u0432\u044b, \u0446\u0438\u0444\u0440\u044b, _" : "\u0421\u0435\u0440\u0432\u0435\u0440 \u043d\u0435 \u043e\u0442\u0432\u0435\u0442\u0438\u043b, \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435";
+                un.style.color = "#ff6b7d";
+              }
+            }
+          }).catch(function () {
+            if (un) { un.textContent = "\u0421\u0435\u0440\u0432\u0435\u0440 \u043d\u0435 \u043e\u0442\u0432\u0435\u0442\u0438\u043b, \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435"; un.style.color = "#ff6b7d"; }
+          });
+        },
+        true
+      );
     }
   }
-
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
-  else wire();
+​
+  function pump() { wire(); setTimeout(pump, 3000); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", pump);
+  else pump();
 })();
-        
+​
