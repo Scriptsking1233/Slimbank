@@ -349,6 +349,70 @@
   }
   api.syncNow = syncNow;
 
+  /* ---------- v4 API: transfers, lots, verification, admin ---------- */
+  function num(v) { return Number(v || 0); }
+
+  api.cardLookup = function (card) {
+    return rpc("sb_card_lookup", { p_card: String(card || "") });
+  };
+  api.transfer = function (card, amount, note) {
+    return rpc("sb_transfer", {
+      p_token: getToken(), p_card: String(card || ""),
+      p_amount: num(amount), p_note: String(note || "")
+    });
+  };
+  api.transfers = function (limit) {
+    return rpc("sb_transfers", { p_token: getToken(), p_limit: limit || 40 });
+  };
+  api.buyVerified = function () {
+    return rpc("sb_buy_verified", { p_token: getToken() });
+  };
+  api.setProfile = function (avatar, banner, display) {
+    return rpc("sb_set_profile", {
+      p_token: getToken(), p_avatar: avatar || "",
+      p_banner: banner || "", p_display: display || ""
+    });
+  };
+  api.lots = function (limit) {
+    return rpc("sb_lots", { p_limit: limit || 80 });
+  };
+  api.myLots = function () {
+    return rpc("sb_my_lots", { p_token: getToken() });
+  };
+  api.lotCreate = function (kind, item, price, title) {
+    return rpc("sb_lot_create", {
+      p_token: getToken(), p_kind: kind || "name", p_item: String(item || ""),
+      p_price: num(price), p_title: String(title || "")
+    });
+  };
+  api.lotBuy = function (id) {
+    return rpc("sb_lot_buy", { p_token: getToken(), p_id: Number(id) });
+  };
+  api.lotCancel = function (id) {
+    return rpc("sb_lot_cancel", { p_token: getToken(), p_id: Number(id) });
+  };
+  api.amIAdmin = function () {
+    return rpc("sb_am_i_admin", { p_token: getToken() });
+  };
+  api.adminPlayers = function (query, limit) {
+    return rpc("sb_admin_players", {
+      p_token: getToken(), p_query: String(query || ""), p_limit: limit || 60
+    });
+  };
+  api.adminSet = function (id, field, value) {
+    return rpc("sb_admin_set", {
+      p_token: getToken(), p_id: Number(id),
+      p_field: String(field || ""), p_value: String(value === undefined ? "" : value)
+    });
+  };
+  api.adminDelete = function (id) {
+    return rpc("sb_admin_delete", { p_token: getToken(), p_id: Number(id) });
+  };
+  api.adminStats = function () {
+    return rpc("sb_admin_stats", { p_token: getToken() });
+  };
+  api.hasToken = function () { return !!getToken(); };
+
   /* ---------- session watchdog: a token must always exist ---------- */
   var sesBusy = false, sesAt = 0;
   function ensureSession() {

@@ -9372,6 +9372,533 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
     });
   }
 
+
+  /* ==================================================================
+     v19 — регистрация: города, дата, автономер, пароль, юзернейм, аватар
+     ================================================================== */
+  var V19_CITIES = [
+    "Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург", "Казань",
+    "Нижний Новгород", "Челябинск", "Красноярск", "Самара", "Уфа",
+    "Ростов-на-Дону", "Омск", "Краснодар", "Воронеж", "Пермь",
+    "Волгоград", "Саратов", "Тюмень", "Тольятти", "Ижевск",
+    "Барнаул", "Иркутск", "Ульяновск", "Хабаровск", "Владивосток",
+    "Ярославль", "Махачкала", "Томск", "Оренбург", "Кемерово",
+    "Новокузнецк", "Рязань", "Набережные Челны", "Астрахань", "Пенза",
+    "Киров", "Липецк", "Чебоксары", "Балашиха", "Калининград",
+    "Тула", "Курск", "Ставрополь", "Сочи", "Белгород",
+    "Тверь", "Магнитогорск", "Иваново", "Брянск", "Сургут",
+    "Владимир", "Архангельск", "Чита", "Калуга", "Смоленск",
+    "Волжский", "Курган", "Череповец", "Орёл", "Вологда",
+    "Якутск", "Саранск", "Тамбов", "Грозный", "Яктау",
+    "Новороссийск", "Петрозаводск", "Нижневартовск", "Йошкар-Ола", "Кострома",
+    "Новгород", "Таганрог", "Комсомольск-на-Амуре", "Сыктывкар", "Нальчик",
+    "Шахты", "Дзержинск", "Орск", "Братск", "Ангарск",
+    "Евпатория", "Симферополь", "Севастополь", "Псков", "Мурманск"
+  ];
+
+  var V19_WEAK = [
+    "123456", "1234567", "12345678", "123456789", "1234567890", "password",
+    "qwerty", "qwerty123", "111111", "000000", "123123", "abc123",
+    "iloveyou", "admin", "admin123", "welcome", "monkey", "dragon",
+    "letmein", "football", "master", "sunshine", "princess", "qazwsx",
+    "zxcvbn", "asdfgh", "1q2w3e4r", "1q2w3e", "11111111", "22222222",
+    "87654321", "password1", "passw0rd", "qwe123", "slimbank", "slimbank1",
+    "пароль", "кукареку", "йцукен"
+  ];
+
+  var V19_AVATARS = [
+    { id: "a1", g: "linear-gradient(135deg,#6366f1,#22d3ee)", e: "\ud83d\udc64" },
+    { id: "a2", g: "linear-gradient(135deg,#f59e0b,#ef4444)", e: "\ud83e\udd8a" },
+    { id: "a3", g: "linear-gradient(135deg,#10b981,#3b82f6)", e: "\ud83d\udc3c" },
+    { id: "a4", g: "linear-gradient(135deg,#8b5cf6,#ec4899)", e: "\ud83e\udd84" },
+    { id: "a5", g: "linear-gradient(135deg,#0ea5e9,#14b8a6)", e: "\ud83d\udc33" },
+    { id: "a6", g: "linear-gradient(135deg,#f43f5e,#f97316)", e: "\ud83e\udd81" },
+    { id: "a7", g: "linear-gradient(135deg,#334155,#0f172a)", e: "\ud83e\udd85" },
+    { id: "a8", g: "linear-gradient(135deg,#eab308,#84cc16)", e: "\ud83d\udc22" },
+    { id: "a9", g: "linear-gradient(135deg,#a855f7,#6366f1)", e: "\ud83d\udc7d" },
+    { id: "a10", g: "linear-gradient(135deg,#06b6d4,#8b5cf6)", e: "\ud83d\udc3a" },
+    { id: "a11", g: "linear-gradient(135deg,#fb7185,#fbbf24)", e: "\ud83d\udc31" },
+    { id: "a12", g: "linear-gradient(135deg,#22c55e,#eab308)", e: "\ud83d\udc32" }
+  ];
+
+  var V19_BANNERS = [
+    { id: "b1", g: "linear-gradient(120deg,#0f172a,#1e3a8a 60%,#0ea5e9)" },
+    { id: "b2", g: "linear-gradient(120deg,#111827,#4c1d95 55%,#c026d3)" },
+    { id: "b3", g: "linear-gradient(120deg,#052e16,#065f46 55%,#34d399)" },
+    { id: "b4", g: "linear-gradient(120deg,#450a0a,#b91c1c 60%,#fb923c)" },
+    { id: "b5", g: "linear-gradient(120deg,#0c4a6e,#0891b2 55%,#67e8f9)" },
+    { id: "b6", g: "linear-gradient(120deg,#1c1917,#57534e 55%,#d6d3d1)" },
+    { id: "b7", g: "linear-gradient(120deg,#3b0764,#7e22ce 50%,#f0abfc)" },
+    { id: "b8", g: "linear-gradient(120deg,#422006,#a16207 55%,#fde047)" }
+  ];
+
+  function v19Avatar(id) {
+    for (var i = 0; i < V19_AVATARS.length; i++) if (V19_AVATARS[i].id === id) return V19_AVATARS[i];
+    return V19_AVATARS[0];
+  }
+  function v19Banner(id) {
+    for (var i = 0; i < V19_BANNERS.length; i++) if (V19_BANNERS[i].id === id) return V19_BANNERS[i];
+    return V19_BANNERS[0];
+  }
+
+  /* ---- генераторы ---- */
+  var V19_OPS = ["901", "902", "903", "905", "906", "909", "910", "911", "912",
+                 "915", "916", "917", "919", "920", "921", "922", "925", "926",
+                 "927", "929", "930", "931", "936", "937", "950", "951", "952",
+                 "953", "960", "961", "962", "963", "964", "965", "967", "968",
+                 "977", "980", "981", "982", "985", "987", "988", "989", "999"];
+
+  function v19RndPhone() {
+    var op = V19_OPS[Math.floor(Math.random() * V19_OPS.length)];
+    var tail = "";
+    for (var i = 0; i < 7; i++) tail += Math.floor(Math.random() * 10);
+    return "+7 " + op + " " + tail.slice(0, 3) + "-" + tail.slice(3, 5) + "-" + tail.slice(5, 7);
+  }
+
+  var V19_MAIL = ["slimbank.ru", "slim.mail", "slimpay.ru", "bank-slim.ru", "slimid.ru"];
+
+  function v19Translit(t) {
+    var m = {
+      "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e", "ж": "zh",
+      "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o",
+      "п": "p", "р": "r", "с": "s", "т": "t", "у": "u", "ф": "f", "х": "h", "ц": "c",
+      "ч": "ch", "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "", "э": "e",
+      "ю": "yu", "я": "ya"
+    };
+    var out = "", src = String(t || "").toLowerCase();
+    for (var i = 0; i < src.length; i++) {
+      var c = src.charAt(i);
+      out += (m[c] !== undefined ? m[c] : (/[a-z0-9]/.test(c) ? c : ""));
+    }
+    return out;
+  }
+
+  function v19RndEmail() {
+    var f = v19Translit(($("#firstName") || {}).value || "");
+    var l = v19Translit(($("#lastName") || {}).value || "");
+    var base = (f || "slim") + (l ? "." + l : "");
+    if (base.length < 3) base = "client";
+    var n = Math.floor(Math.random() * 9000) + 1000;
+    return base + n + "@" + V19_MAIL[Math.floor(Math.random() * V19_MAIL.length)];
+  }
+
+  /* ---- проверка пароля ---- */
+  function v19PassCheck(p) {
+    p = String(p || "");
+    var low = p.toLowerCase();
+    var res = { ok: false, score: 0, msg: "" };
+    if (p.length < 8) { res.msg = "Минимум 8 символов"; return res; }
+    for (var i = 0; i < V19_WEAK.length; i++) {
+      if (low === V19_WEAK[i] || low.indexOf(V19_WEAK[i]) === 0 && V19_WEAK[i].length >= 6) {
+        res.msg = "Слишком простой пароль — его легко угадать";
+        return res;
+      }
+    }
+    if (/^(.)\1+$/.test(p)) { res.msg = "Одни и те же символы — не годится"; return res; }
+    if (/^[0-9]+$/.test(p)) { res.msg = "Только цифры — добавьте буквы"; return res; }
+    var hasLower = /[a-zа-я]/.test(p), hasUpper = /[A-ZА-Я]/.test(p);
+    var hasDigit = /[0-9]/.test(p), hasSpec = /[^A-Za-z0-9а-яА-Я]/.test(p);
+    if (!hasDigit) { res.msg = "Добавьте хотя бы одну цифру"; return res; }
+    if (!hasLower && !hasUpper) { res.msg = "Добавьте буквы"; return res; }
+    var sc = 0;
+    if (p.length >= 8) sc += 25;
+    if (p.length >= 12) sc += 15;
+    if (hasLower && hasUpper) sc += 20;
+    if (hasDigit) sc += 20;
+    if (hasSpec) sc += 20;
+    res.score = Math.min(100, sc);
+    res.ok = true;
+    res.msg = res.score >= 80 ? "Отличный пароль"
+            : res.score >= 60 ? "Надёжный пароль"
+            : "Сгодится, но можно сильнее";
+    return res;
+  }
+
+  function v19GenPass() {
+    var A = "ABCDEFGHJKLMNPQRSTUVWXYZ", a = "abcdefghijkmnpqrstuvwxyz";
+    var d = "23456789", sp = "!@#$%&*?";
+    var all = A + a + d + sp, out = "";
+    out += A.charAt(Math.floor(Math.random() * A.length));
+    out += a.charAt(Math.floor(Math.random() * a.length));
+    out += d.charAt(Math.floor(Math.random() * d.length));
+    out += sp.charAt(Math.floor(Math.random() * sp.length));
+    for (var i = 0; i < 8; i++) out += all.charAt(Math.floor(Math.random() * all.length));
+    return out.split("").sort(function () { return Math.random() - 0.5; }).join("");
+  }
+
+  /* ---- пересборка формы регистрации ---- */
+  var v19Reg = { avatar: "a1", banner: "b1", username: "", userOk: false };
+
+  function v19BuildCity() {
+    var inp = $("#city");
+    if (!inp || inp.dataset.v19) return;
+    var sel = document.createElement("select");
+    sel.id = "city";
+    sel.className = inp.className;
+    sel.dataset.v19 = "1";
+    var html = '<option value="">Выберите город</option>';
+    for (var i = 0; i < V19_CITIES.length; i++) {
+      html += '<option>' + V19_CITIES[i] + '</option>';
+    }
+    sel.innerHTML = html;
+    inp.parentNode.replaceChild(sel, inp);
+    sel.value = "Москва";
+    var dl = $("#cityList");
+    if (dl && dl.parentNode) dl.parentNode.removeChild(dl);
+  }
+
+  function v19BuildBirth() {
+    var inp = $("#birth");
+    if (!inp || inp.dataset.v19) return;
+    inp.dataset.v19 = "1";
+    inp.type = "hidden";
+    var wrap = document.createElement("div");
+    wrap.className = "v19-birth";
+    var MON = ["января", "февраля", "марта", "апреля", "мая", "июня",
+               "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+    var dh = "", mh = "", yh = "";
+    for (var d = 1; d <= 31; d++) dh += '<option>' + d + '</option>';
+    for (var m = 0; m < 12; m++) mh += '<option value="' + (m + 1) + '">' + MON[m] + '</option>';
+    for (var y = 2026; y >= 1985; y--) yh += '<option>' + y + '</option>';
+    wrap.innerHTML =
+      '<select id="bDay" class="v19-sel">' + dh + '</select>' +
+      '<select id="bMon" class="v19-sel">' + mh + '</select>' +
+      '<select id="bYear" class="v19-sel">' + yh + '</select>';
+    inp.parentNode.insertBefore(wrap, inp.nextSibling);
+
+    function sync() {
+      var dd = $("#bDay").value, mm = $("#bMon").value, yy = $("#bYear").value;
+      var max = new Date(Number(yy), Number(mm), 0).getDate();
+      if (Number(dd) > max) { $("#bDay").value = max; dd = String(max); }
+      inp.value = yy + "-" + pad(Number(mm)) + "-" + pad(Number(dd));
+    }
+    wrap.addEventListener("change", sync);
+    $("#bDay").value = "15";
+    $("#bMon").value = "6";
+    $("#bYear").value = "2000";
+    sync();
+    var hint = inp.parentNode.querySelector(".hint");
+    if (hint) hint.textContent = "Год рождения — от 1985 до 2026";
+  }
+
+  function v19BuildAuto() {
+    var ph = $("#phone"), em = $("#email");
+    if (!ph || ph.dataset.v19) return;
+    ph.dataset.v19 = "1";
+    ph.value = v19RndPhone();
+    ph.readOnly = true;
+    ph.classList.add("v19-ro");
+    if (em) {
+      em.value = v19RndEmail();
+      em.readOnly = true;
+      em.classList.add("v19-ro");
+    }
+    var hint = ph.parentNode.querySelector(".hint");
+    if (hint) hint.textContent = "Номер выдан банком автоматически";
+    if (em) {
+      var h2 = em.parentNode.querySelector(".hint");
+      if (h2) h2.textContent = "Почта выдана банком автоматически";
+    }
+    var row = ph.closest(".row") || ph.parentNode;
+    var bar = document.createElement("div");
+    bar.className = "v19-genbar";
+    bar.innerHTML =
+      '<button type="button" class="btn btn-ghost btn-sm" id="v19NewPhone">' +
+      'Другой номер</button>' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="v19NewMail">' +
+      'Другая почта</button>';
+    row.parentNode.insertBefore(bar, row.nextSibling);
+    $("#v19NewPhone").addEventListener("click", function () {
+      ph.value = v19RndPhone();
+      ph.classList.add("v19-flash");
+      setTimeout(function () { ph.classList.remove("v19-flash"); }, 420);
+    });
+    $("#v19NewMail").addEventListener("click", function () {
+      if (!em) return;
+      em.value = v19RndEmail();
+      em.classList.add("v19-flash");
+      setTimeout(function () { em.classList.remove("v19-flash"); }, 420);
+    });
+  }
+
+  function v19BuildPass() {
+    var p = $("#pass");
+    if (!p || p.dataset.v19) return;
+    p.dataset.v19 = "1";
+    p.placeholder = "Минимум 8 символов, буквы и цифры";
+    var gen = document.createElement("button");
+    gen.type = "button";
+    gen.className = "btn btn-ghost btn-sm v19-genpass";
+    gen.textContent = "Придумать пароль";
+    p.parentNode.appendChild(gen);
+    gen.addEventListener("click", function () {
+      var np = v19GenPass();
+      p.type = "text";
+      p.value = np;
+      var p2 = $("#pass2");
+      if (p2) p2.value = np;
+      v19PassPaint();
+      toast("Пароль создан", "Запишите его: " + np, "ok");
+    });
+    p.addEventListener("input", v19PassPaint);
+    v19PassPaint();
+  }
+
+  function v19PassPaint() {
+    var p = $("#pass");
+    if (!p) return;
+    var r = v19PassCheck(p.value);
+    var meter = $("#passMeter"), hint = $("#passHint");
+    if (meter) {
+      meter.style.width = (p.value ? Math.max(12, r.score) : 0) + "%";
+      meter.style.background = !p.value ? "transparent"
+        : !r.ok ? "linear-gradient(90deg,#ef4444,#f97316)"
+        : r.score >= 80 ? "linear-gradient(90deg,#22c55e,#4ade80)"
+        : "linear-gradient(90deg,#eab308,#84cc16)";
+    }
+    if (hint) {
+      hint.textContent = p.value ? r.msg
+        : "Нужно 8+ символов, буквы и цифры";
+      hint.className = "hint" + (p.value ? (r.ok ? " v19-good" : " v19-bad") : "");
+    }
+  }
+
+  function v19BuildIdentity() {
+    var pane = document.querySelector('#regForm .step[data-pane="1"]');
+    if (!pane || pane.dataset.v19id) return;
+    pane.dataset.v19id = "1";
+
+    var box = document.createElement("div");
+    box.className = "v19-idbox";
+    var av = "", bn = "";
+    for (var i = 0; i < V19_AVATARS.length; i++) {
+      av += '<button type="button" class="v19-av' + (i === 0 ? " on" : "") +
+            '" data-v19av="' + V19_AVATARS[i].id + '" style="background:' +
+            V19_AVATARS[i].g + '"><span>' + V19_AVATARS[i].e + '</span></button>';
+    }
+    for (var j = 0; j < V19_BANNERS.length; j++) {
+      bn += '<button type="button" class="v19-bn' + (j === 0 ? " on" : "") +
+            '" data-v19bn="' + V19_BANNERS[j].id + '" style="background:' +
+            V19_BANNERS[j].g + '"></button>';
+    }
+    box.innerHTML =
+      '<div class="field">' +
+        '<label for="regUser">Юзернейм</label>' +
+        '<div class="v19-urow">' +
+          '<span class="v19-at">@</span>' +
+          '<input id="regUser" maxlength="20" placeholder="nikita" autocomplete="off" />' +
+        '</div>' +
+        '<div class="hint" id="regUserHint">3–20 символов: латиница, цифры, подчёркивание</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Аватар</label>' +
+        '<div class="v19-avgrid">' + av + '</div>' +
+        '<label class="v19-upload">' +
+          '<input type="file" id="regAvFile" accept="image/*" hidden />' +
+          '<span>Загрузить свою картинку</span>' +
+        '</label>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Баннер профиля</label>' +
+        '<div class="v19-bngrid">' + bn + '</div>' +
+      '</div>';
+    pane.appendChild(box);
+
+    box.addEventListener("click", function (e) {
+      var a = e.target.closest("[data-v19av]");
+      if (a) {
+        v19Reg.avatar = a.getAttribute("data-v19av");
+        var all = box.querySelectorAll("[data-v19av]");
+        for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+        a.classList.add("on");
+      }
+      var b = e.target.closest("[data-v19bn]");
+      if (b) {
+        v19Reg.banner = b.getAttribute("data-v19bn");
+        var all2 = box.querySelectorAll("[data-v19bn]");
+        for (var j = 0; j < all2.length; j++) all2[j].classList.remove("on");
+        b.classList.add("on");
+      }
+    });
+
+    var file = $("#regAvFile");
+    if (file) {
+      file.addEventListener("change", function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        if (f.size > 900000) {
+          toast("Файл большой", "Нужна картинка до 900 КБ", "bad");
+          return;
+        }
+        var fr = new FileReader();
+        fr.onload = function () {
+          v19Reg.avatar = String(fr.result);
+          var all = box.querySelectorAll("[data-v19av]");
+          for (var i = 0; i < all.length; i++) all[i].classList.remove("on");
+          toast("Аватар загружен", "Он появится в профиле", "ok");
+        };
+        fr.readAsDataURL(f);
+      });
+    }
+
+    var ui = $("#regUser");
+    var t = null;
+    ui.addEventListener("input", function () {
+      ui.value = ui.value.replace(/[^A-Za-z0-9_]/g, "").toLowerCase();
+      v19Reg.username = ui.value;
+      v19Reg.userOk = false;
+      var h = $("#regUserHint");
+      if (t) clearTimeout(t);
+      if (ui.value.length < 3) {
+        h.textContent = "Минимум 3 символа";
+        h.className = "hint v19-bad";
+        return;
+      }
+      h.textContent = "Проверяем...";
+      h.className = "hint";
+      t = setTimeout(function () { v19CheckUser(ui.value); }, 420);
+    });
+  }
+
+  function v19CheckUser(name) {
+    var h = $("#regUserHint");
+    var srv = window.SlimServer;
+    var localTaken = false;
+    try {
+      var map = loadUsers();
+      for (var k in map) {
+        if (!map.hasOwnProperty(k)) continue;
+        var uu = map[k];
+        if (uu && String(uu.username || "").toLowerCase() === name.toLowerCase()) localTaken = true;
+        var on = (uu && uu.ownNames) || [];
+        for (var i = 0; i < on.length; i++) {
+          if (String(on[i]).replace(/^@/, "").toLowerCase() === name.toLowerCase()) localTaken = true;
+        }
+      }
+    } catch (e) {}
+    if (localTaken) {
+      h.textContent = "@" + name + " уже занят";
+      h.className = "hint v19-bad";
+      v19Reg.userOk = false;
+      return;
+    }
+    if (srv && srv.online && typeof srv.usernameFree === "function") {
+      srv.usernameFree(name).then(function (r) {
+        var free = r && (r.free === true || r.ok === true && r.free !== false);
+        if (free) {
+          h.textContent = "@" + name + " свободен";
+          h.className = "hint v19-good";
+          v19Reg.userOk = true;
+        } else {
+          h.textContent = "@" + name + " уже занят";
+          h.className = "hint v19-bad";
+          v19Reg.userOk = false;
+        }
+      }).catch(function () {
+        h.textContent = "Проверим при регистрации";
+        h.className = "hint";
+        v19Reg.userOk = true;
+      });
+    } else {
+      h.textContent = "@" + name + " свободен (локально)";
+      h.className = "hint v19-good";
+      v19Reg.userOk = true;
+    }
+  }
+
+  /* блокируем шаг с плохим паролем / пустым юзернеймом */
+  function v19Guard() {
+    var form = $("#regForm");
+    if (!form || form.dataset.v19g) return;
+    form.dataset.v19g = "1";
+    form.addEventListener("submit", function (e) {
+      var step = form.querySelector(".step:not(.hidden)");
+      var n = step ? step.getAttribute("data-pane") : "";
+      if (n === "1") {
+        var ui = $("#regUser");
+        if (ui && ui.value.length < 3) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var h = $("#regUserHint");
+          h.textContent = "Придумайте юзернейм — минимум 3 символа";
+          h.className = "hint v19-bad";
+          ui.focus();
+          return;
+        }
+        if (ui && v19Reg.userOk === false && ui.value.length >= 3) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          var h2 = $("#regUserHint");
+          h2.textContent = "Этот юзернейм занят — выберите другой";
+          h2.className = "hint v19-bad";
+          ui.focus();
+          return;
+        }
+        var city = $("#city");
+        if (city && !city.value) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          toast("Город", "Выберите город из списка", "bad");
+          city.focus();
+          return;
+        }
+      }
+      if (n === "2") {
+        var r = v19PassCheck(($("#pass") || {}).value || "");
+        if (!r.ok) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          v19PassPaint();
+          toast("Слабый пароль", r.msg, "bad");
+          var pp = $("#pass");
+          if (pp) pp.focus();
+          return;
+        }
+      }
+    }, true);
+  }
+
+  /* после регистрации — закрепить юзернейм/аватар/баннер */
+  function v19ApplyIdentity() {
+    var u = current;
+    if (!u) return;
+    var changed = false;
+    if (v19Reg.username && !u.username) { u.username = v19Reg.username; changed = true; }
+    if (v19Reg.avatar && !u.avatar) { u.avatar = v19Reg.avatar; changed = true; }
+    if (v19Reg.banner && !u.banner) { u.banner = v19Reg.banner; changed = true; }
+    if (!changed) return;
+    saveUser(u);
+    render(u, false);
+    if (typeof v19PaintProfile === "function") v19PaintProfile(u);
+    var srv = window.SlimServer;
+    if (srv && srv.online) {
+      if (u.username && typeof srv.claimUsername === "function") {
+        srv.claimUsername(u.username).catch(function () {});
+      }
+      if (typeof srv.setProfile === "function") {
+        srv.setProfile(u.avatar, u.banner, (u.first || "") + " " + (u.last || "")).catch(function () {});
+      }
+      if (typeof srv.syncNow === "function") setTimeout(function () { srv.syncNow(true); }, 900);
+    }
+  }
+
+  function v19RegInit() {
+    if (!$("#regForm")) return;
+    v19BuildCity();
+    v19BuildBirth();
+    v19BuildAuto();
+    v19BuildPass();
+    v19BuildIdentity();
+    v19Guard();
+    var f = $("#firstName"), l = $("#lastName");
+    function remail() {
+      var em = $("#email");
+      if (em && em.readOnly) em.value = v19RndEmail();
+    }
+    if (f) f.addEventListener("blur", remail);
+    if (l) l.addEventListener("blur", remail);
+  }
+
   /* ============ мост для сервера (Supabase): безопасные хуки ============ */
   window.SLIM_HOOKS = {
     /* сервер прислал свежий профиль — подхватить его без перезагрузки */
@@ -9412,6 +9939,7 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   function boot() {
     paintIcons();
     buildToggle();
+    try { v19RegInit(); } catch (e) { console.warn("v19 reg", e); }
     var saved = null;
     try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
     var dark = saved ? saved === "dark"
