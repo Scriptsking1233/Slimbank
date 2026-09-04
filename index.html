@@ -9098,281 +9098,6 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
     }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
-})();
-
-/* SlimBANK polish layer: tilt, pointer glow, scroll progress, stagger */
-(function () {
-  "use strict";
-  var reduce = false;
-  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-
-  function ready(fn) {
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
-    else fn();
-  }
-
-  ready(function () {
-    /* ---- scroll progress + sticky header ---- */
-    var bar = document.createElement("div");
-    bar.id = "scrollProgress";
-    document.body.appendChild(bar);
-    var header = document.getElementById("siteHeader");
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(function () {
-        var h = document.documentElement;
-        var max = (h.scrollHeight - h.clientHeight) || 1;
-        var p = Math.min(100, Math.max(0, (h.scrollTop || window.pageYOffset) / max * 100));
-        bar.style.width = p + "%";
-        if (header) header.classList.toggle("scrolled", (h.scrollTop || window.pageYOffset) > 12);
-        ticking = false;
-      });
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
-    /* ---- stagger reveal delays ---- */
-    function stagger() {
-      var groups = document.querySelectorAll(".grid-3, .grid-2, .inv-grid");
-      Array.prototype.forEach.call(groups, function (g) {
-        var kids = g.querySelectorAll(":scope > .reveal");
-        Array.prototype.forEach.call(kids, function (k, i) {
-          k.style.setProperty("--rd", (i * 90) + "ms");
-        });
-      });
-    }
-    try { stagger(); } catch (e) {}
-
-    if (reduce) return;
-
-    /* ---- pointer glow on surfaces ---- */
-    document.addEventListener("pointermove", function (e) {
-      var el = e.target && e.target.closest ? e.target.closest(".card, .panel") : null;
-      if (!el) return;
-      var r = el.getBoundingClientRect();
-      el.style.setProperty("--mx", (e.clientX - r.left) + "px");
-      el.style.setProperty("--my", (e.clientY - r.top) + "px");
-    }, { passive: true });
-
-    /* ---- 3D tilt ---- */
-    function tilt(el, maxDeg, scale) {
-      if (!el) return;
-      var raf = null, tx = 0, ty = 0, cur = { x: 0, y: 0 }, active = false;
-      function loop() {
-        cur.x += (tx - cur.x) * 0.14;
-        cur.y += (ty - cur.y) * 0.14;
-        el.style.transform = "perspective(1400px) rotateX(" + cur.y.toFixed(2) + "deg) rotateY(" +
-          cur.x.toFixed(2) + "deg) scale(" + (active ? scale : 1) + ")";
-        if (Math.abs(tx - cur.x) > 0.01 || Math.abs(ty - cur.y) > 0.01) raf = window.requestAnimationFrame(loop);
-        else { raf = null; if (!active) el.style.transform = ""; }
-      }
-      function kick() { if (!raf) raf = window.requestAnimationFrame(loop); }
-      el.addEventListener("pointermove", function (e) {
-        var r = el.getBoundingClientRect();
-        var px = (e.clientX - r.left) / r.width - 0.5;
-        var py = (e.clientY - r.top) / r.height - 0.5;
-        active = true;
-        tx = px * maxDeg * 2;
-        ty = -py * maxDeg * 2;
-        kick();
-      }, { passive: true });
-      el.addEventListener("pointerleave", function () {
-        active = false; tx = 0; ty = 0; kick();
-      }, { passive: true });
-    }
-
-    tilt(document.getElementById("cardFlip"), 9, 1.03);
-    var stage = document.querySelector(".card-stage");
-    if (stage) {
-      var front = stage.querySelector(".cardv.is-front");
-      var back = stage.querySelector(".cardv.is-back");
-      stage.addEventListener("pointermove", function (e) {
-        var r = stage.getBoundingClientRect();
-        var px = (e.clientX - r.left) / r.width - 0.5;
-        var py = (e.clientY - r.top) / r.height - 0.5;
-        if (front) {
-          front.style.animation = "none";
-          front.style.transform = "rotate(-4deg) translateY(8px) rotateX(" + (-py * 12).toFixed(2) +
-            "deg) rotateY(" + (px * 14).toFixed(2) + "deg) translateZ(24px)";
-        }
-        if (back) {
-          back.style.animation = "none";
-          back.style.transform = "rotate(6deg) rotateX(" + (-py * 7).toFixed(2) +
-            "deg) rotateY(" + (px * 8).toFixed(2) + "deg)";
-        }
-      }, { passive: true });
-      stage.addEventListener("pointerleave", function () {
-        [front, back].forEach(function (c) {
-          if (!c) return;
-          c.style.transform = "";
-          c.style.animation = "";
-        });
-      }, { passive: true });
-    }
-
-    /* ---- magnetic primary buttons ---- */
-    document.addEventListener("pointermove", function (e) {
-      var b = e.target && e.target.closest ? e.target.closest(".btn-primary, .btn-dark") : null;
-      if (!b || b.disabled) return;
-      var r = b.getBoundingClientRect();
-      var dx = (e.clientX - (r.left + r.width / 2)) / r.width;
-      var dy = (e.clientY - (r.top + r.height / 2)) / r.height;
-      b.style.transform = "translate(" + (dx * 5).toFixed(1) + "px," + (dy * 4 - 2).toFixed(1) + "px) scale(1.02)";
-      b.__mag = 1;
-    }, { passive: true });
-    document.addEventListener("pointerout", function (e) {
-      var b = e.target && e.target.closest ? e.target.closest(".btn-primary, .btn-dark") : null;
-      if (b && b.__mag) { b.style.transform = ""; b.__mag = 0; }
-    }, { passive: true });
-  });
-})();
-
-/* SlimBANK polish layer 2: card cinema + smoother motion */
-(function () {
-  "use strict";
-  var reduce = false;
-  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-
-  function ready(fn) {
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
-    else fn();
-  }
-
-  function decorate(card, withNfc) {
-    if (!card || card.__deco) return;
-    card.__deco = 1;
-    var glare = document.createElement("span");
-    glare.className = "card-glare";
-    card.appendChild(glare);
-    var sweep = document.createElement("span");
-    sweep.className = "card-sweep";
-    card.appendChild(sweep);
-    if (withNfc) {
-      var nfc = document.createElement("span");
-      nfc.className = "card-nfc";
-      nfc.innerHTML = "<i></i><i></i><i></i>";
-      card.appendChild(nfc);
-    }
-  }
-
-  ready(function () {
-    var fronts = document.querySelectorAll(".cardv.front, .cardv.is-front");
-    Array.prototype.forEach.call(fronts, function (c) { decorate(c, true); });
-    var backs = document.querySelectorAll(".cardv.is-back");
-    Array.prototype.forEach.call(backs, function (c) { decorate(c, false); });
-
-    /* theme change pop */
-    var pickers = document.querySelectorAll("#themePicker2 .swatch, #themePicker .swatch");
-    Array.prototype.forEach.call(pickers, function (b) {
-      b.addEventListener("click", function () {
-        var targets = document.querySelectorAll("#cardFront, #cardRear");
-        Array.prototype.forEach.call(targets, function (c) {
-          c.classList.remove("theme-pop");
-          void c.offsetWidth;
-          c.classList.add("theme-pop");
-        });
-      });
-    });
-
-    if (reduce) return;
-
-    /* glare follows the pointer over any card surface */
-    function glareMove(e) {
-      var card = e.target && e.target.closest ? e.target.closest(".cardv") : null;
-      if (!card) return;
-      var g = card.querySelector(".card-glare");
-      if (!g) return;
-      var r = card.getBoundingClientRect();
-      g.style.setProperty("--gx", (e.clientX - r.left) + "px");
-      g.style.setProperty("--gy", (e.clientY - r.top) + "px");
-    }
-    document.addEventListener("pointermove", glareMove, { passive: true });
-
-    /* keep flip rotation in a CSS var so :active scale keeps the face */
-    var flip = document.getElementById("cardFlip");
-    if (flip) {
-      var sync = function () {
-        flip.style.setProperty("--fr", flip.classList.contains("flipped") ? "180deg" : "0deg");
-      };
-      flip.addEventListener("click", function () { window.setTimeout(sync, 0); });
-      sync();
-    }
-
-    /* soft parallax for the landing card stack on page scroll */
-    var stage = document.querySelector(".card-stage");
-    if (stage) {
-      var raf = null;
-      window.addEventListener("scroll", function () {
-        if (raf) return;
-        raf = window.requestAnimationFrame(function () {
-          raf = null;
-          var r = stage.getBoundingClientRect();
-          if (r.bottom < 0 || r.top > window.innerHeight) return;
-          var k = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;
-          stage.style.transform = "translateY(" + (k * -22).toFixed(1) + "px)";
-        });
-      }, { passive: true });
-    }
-  });
-})();
-
-/* ---------- polish layer 3: icon injection + light/dark switch ---------- */
-(function () {
-  var THEME_KEY = "slimbank_theme_v1";
-
-  function paintIcons(root) {
-    var scope = root || document;
-    var nodes = scope.querySelectorAll("[data-icon]");
-    for (var i = 0; i < nodes.length; i++) {
-      var el = nodes[i];
-      if (el.getAttribute("data-icon-done") === "1") continue;
-      el.innerHTML = ic(el.getAttribute("data-icon"));
-      el.setAttribute("data-icon-done", "1");
-    }
-  }
-
-  function applyTheme(dark, animate) {
-    document.body.classList.toggle("dark", !!dark);
-    var btn = document.getElementById("themeToggle");
-    if (btn) {
-      var sun = btn.querySelector(".i-sun");
-      var moon = btn.querySelector(".i-moon");
-      if (sun && moon) {
-        sun.classList.toggle("off", !dark);
-        moon.classList.toggle("off", !!dark);
-      }
-      var lbl = btn.querySelector(".lbl");
-      if (lbl) lbl.textContent = dark ? "\u0421\u0432\u0435\u0442\u043b\u0430\u044f \u0442\u0435\u043c\u0430" : "\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430";
-      if (animate) {
-        btn.classList.remove("pop");
-        void btn.offsetWidth;
-        btn.classList.add("pop");
-      }
-    }
-  }
-
-  function buildToggle() {
-    if (document.getElementById("themeToggle")) return;
-    var btn = document.createElement("button");
-    btn.id = "themeToggle";
-    btn.type = "button";
-    btn.setAttribute("aria-label", "\u0421\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u0435\u043c\u0443");
-    btn.innerHTML =
-      ic("moon", "i-moon") + ic("sun", "i-sun off") +
-      '<span class="lbl">\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430</span>';
-    document.body.appendChild(btn);
-    btn.addEventListener("click", function () {
-      var next = !document.body.classList.contains("dark");
-      try { localStorage.setItem(THEME_KEY, next ? "dark" : "light"); } catch (e) {}
-      applyTheme(next, true);
-    });
-  }
-
-
   /* ==================================================================
      v19 — регистрация: города, дата, автономер, пароль, юзернейм, аватар
      ================================================================== */
@@ -9899,6 +9624,1102 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
     if (l) l.addEventListener("blur", remail);
   }
 
+
+
+  /* ==================================================================
+     v19b - переводы, профиль, аукцион от игроков, админка
+     ================================================================== */
+  var V19_VER_COST = 1000000000;
+  var V19_LOTS_KEY = "slimbank_lots_v2";
+
+  function v19Srv() { return window.SlimServer || null; }
+  function v19Online() { var s = v19Srv(); return !!(s && s.online && s.hasToken && s.hasToken()); }
+  function v19Cash(n) {
+    try { return money(n); } catch (e) { return String(Math.round(n || 0)) + " ₽"; }
+  }
+  function v19Esc(t) {
+    return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function v19Digits(t) { return String(t || "").replace(/\D/g, ""); }
+  function v19Name(u) {
+    if (!u) return "Клиент";
+    return ((u.first || "") + " " + (u.last || "")).trim() || (u.username ? "@" + u.username : "Клиент");
+  }
+  function v19Toast(t, kind) {
+    try { toast(t, kind); return; } catch (e) {}
+    try { console.log("[v19]", t); } catch (e) {}
+  }
+
+  function v19Css() {
+    if (document.getElementById("v19css2")) return;
+    var st = document.createElement("style");
+    st.id = "v19css2";
+    st.textContent = [
+      ".v19-card{border-radius:22px;padding:20px;background:var(--surface,rgba(255,255,255,.06));",
+      "border:1px solid var(--line,rgba(255,255,255,.09));box-shadow:0 18px 44px rgba(0,0,0,.16);margin-bottom:18px;",
+      "animation:v19in .5s cubic-bezier(.22,.9,.24,1) both}",
+      "@keyframes v19in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}",
+      ".v19-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}",
+      ".v19-h b{font-size:18px;letter-spacing:-.2px}",
+      ".v19-sub{opacity:.62;font-size:13px}",
+      ".v19-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}",
+      ".v19-in{flex:1 1 190px;min-width:150px;padding:13px 15px;border-radius:14px;font:inherit;",
+      "background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.22);color:inherit;transition:.22s}",
+      ".v19-in:focus{outline:none;border-color:rgba(90,140,255,.75);box-shadow:0 0 0 4px rgba(90,140,255,.16)}",
+      ".v19-b{padding:13px 20px;border-radius:14px;border:0;font:inherit;font-weight:650;cursor:pointer;",
+      "background:linear-gradient(135deg,#5b7cff,#8b5cf6);color:#fff;transition:transform .18s,box-shadow .18s;box-shadow:0 10px 24px rgba(91,124,255,.3)}",
+      ".v19-b:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(91,124,255,.42)}",
+      ".v19-b:active{transform:translateY(0) scale(.98)}",
+      ".v19-b.g{background:linear-gradient(135deg,#22c55e,#0ea5e9);box-shadow:0 10px 24px rgba(34,197,94,.3)}",
+      ".v19-b.x{background:rgba(127,127,127,.18);color:inherit;box-shadow:none}",
+      ".v19-chip{padding:8px 13px;border-radius:11px;border:1px solid rgba(127,127,127,.25);",
+      "background:transparent;color:inherit;font:inherit;font-size:13px;cursor:pointer;transition:.18s}",
+      ".v19-chip:hover{background:rgba(127,127,127,.14);transform:translateY(-1px)}",
+      ".v19-who{margin-top:10px;font-size:13.5px;min-height:20px;opacity:.85}",
+      ".v19-ok{color:#22c55e}.v19-bad{color:#ef4444}",
+      ".v19-list{margin-top:14px;display:grid;gap:8px}",
+      ".v19-li{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-radius:13px;",
+      "background:rgba(127,127,127,.08);font-size:13.5px}",
+      ".v19-empty{opacity:.55;font-size:13.5px;padding:14px;text-align:center}",
+      ".v19-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));margin-top:14px}",
+      ".v19-lot{border-radius:18px;padding:16px;background:rgba(127,127,127,.08);",
+      "border:1px solid rgba(127,127,127,.16);transition:transform .22s,box-shadow .22s}",
+      ".v19-lot:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(0,0,0,.18)}",
+      ".v19-lot .t{font-size:17px;font-weight:700;letter-spacing:-.2px}",
+      ".v19-lot .p{margin:8px 0 12px;opacity:.72;font-size:13px}",
+      ".v19-ov{position:fixed;inset:0;z-index:9999;background:rgba(8,10,18,.62);backdrop-filter:blur(9px);",
+      "display:flex;align-items:center;justify-content:center;padding:20px;animation:v19fade .25s both}",
+      "@keyframes v19fade{from{opacity:0}to{opacity:1}}",
+      ".v19-mod{width:min(560px,100%);max-height:86vh;overflow:auto;border-radius:24px;padding:24px;",
+      "background:var(--bg,#12141c);color:var(--text,#fff);border:1px solid rgba(255,255,255,.12);",
+      "box-shadow:0 30px 80px rgba(0,0,0,.5);animation:v19pop .4s cubic-bezier(.2,1.1,.3,1) both}",
+      "@keyframes v19pop{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}",
+      ".v19-x{float:right;border:0;background:transparent;color:inherit;font-size:22px;cursor:pointer;opacity:.6}",
+      ".v19-x:hover{opacity:1}",
+      ".v19-pick{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));margin-top:14px}",
+      ".v19-pi{height:78px;border-radius:18px;border:2px solid transparent;cursor:pointer;display:flex;",
+      "align-items:center;justify-content:center;font-size:27px;transition:transform .2s,border-color .2s}",
+      ".v19-pi:hover{transform:scale(1.07)}.v19-pi.sel{border-color:#fff}",
+      ".v19-bn{height:52px;border-radius:14px;cursor:pointer;border:2px solid transparent;transition:.2s}",
+      ".v19-bn:hover{transform:scale(1.04)}",
+      ".v19-banner{height:104px;border-radius:20px 20px 0 0;margin:-20px -20px 0;background-size:cover;position:relative}",
+      ".v19-prb{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}",
+      ".v19-tick{display:inline-flex;vertical-align:-2px;margin-left:6px}",
+      ".v19-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}",
+      ".v19-tbl th,.v19-tbl td{padding:9px 8px;text-align:left;border-bottom:1px solid rgba(127,127,127,.16)}",
+      ".v19-tbl th{opacity:.6;font-weight:600}",
+      ".v19-stats{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}",
+      ".v19-stat{padding:14px;border-radius:16px;background:rgba(127,127,127,.09)}",
+      ".v19-stat b{display:block;font-size:20px;margin-bottom:3px}",
+      ".v19-stat span{opacity:.6;font-size:12px}"
+    ].join("");
+    document.head.appendChild(st);
+  }
+
+  function v19Modal(title, html, onMount) {
+    var ov = document.createElement("div");
+    ov.className = "v19-ov";
+    ov.innerHTML = '<div class="v19-mod"><button class="v19-x" type="button">&times;</button>' +
+      '<b style="font-size:19px">' + v19Esc(title) + "</b>" + html + "</div>";
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
+    ov.querySelector(".v19-x").addEventListener("click", close);
+    document.body.appendChild(ov);
+    if (onMount) { try { onMount(ov, close); } catch (e) { console.warn("v19 modal", e); } }
+    return { el: ov, close: close };
+  }
+
+  function v19TickSvg() {
+    return '<span class="v19-tick" title="Верифицированный аукционер">' +
+      '<svg width="19" height="19" viewBox="0 0 24 24"><path fill="#38a3ff" d="M12 1.6l2.5 2.1 3.2-.4 1 3.1 2.8 1.7-1.2 3 1.2 3-2.8 1.7-1 3.1-3.2-.4L12 22.4 9.5 20.3l-3.2.4-1-3.1L2.5 15.9l1.2-3-1.2-3 2.8-1.7 1-3.1 3.2.4z"/>' +
+      '<path fill="#fff" d="M10.6 15.4l-3-3 1.3-1.3 1.7 1.7 4.4-4.4 1.3 1.3z"/></svg></span>';
+  }
+
+  /* ---------- переводы по номеру карты ---------- */
+  function v19FindByCard(card) {
+    var d = v19Digits(card), all = loadUsers(), k;
+    if (d.length < 16) return null;
+    for (k in all) {
+      if (!all.hasOwnProperty(k)) continue;
+      var u = all[k];
+      var num = u && u.card ? v19Digits(u.card.number) : "";
+      if (num && num === d) return u;
+    }
+    return null;
+  }
+
+  function v19BuildTransfer() {
+    var pane = document.querySelector('.tabpane[data-pane="accounts"]');
+    if (!pane || document.getElementById("v19TrPanel")) return;
+    var box = document.createElement("section");
+    box.className = "v19-card";
+    box.id = "v19TrPanel";
+    box.innerHTML = [
+      '<div class="v19-h"><b>Перевод по номеру карты</b>',
+      '<span class="v19-sub">16 цифр карты получателя</span></div>',
+      '<div class="v19-row"><input class="v19-in" id="v19TrCard" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000">',
+      '<input class="v19-in" id="v19TrSum" inputmode="numeric" placeholder="Сумма"></div>',
+      '<div class="v19-row" style="margin-top:10px">',
+      '<button class="v19-chip" data-trq="1000" type="button">1 000</button>',
+      '<button class="v19-chip" data-trq="10000" type="button">10 000</button>',
+      '<button class="v19-chip" data-trq="100000" type="button">100 000</button>',
+      '<button class="v19-chip" data-trq="1000000" type="button">1 млн</button>',
+      '<button class="v19-chip" data-trq="all" type="button">Всё</button></div>',
+      '<div class="v19-row" style="margin-top:10px">',
+      '<input class="v19-in" id="v19TrNote" maxlength="60" placeholder="Комментарий (необязательно)">',
+      '<button class="v19-b" id="v19TrGo" type="button">Перевести</button></div>',
+      '<div class="v19-who" id="v19TrWho"></div>',
+      '<div class="v19-list" id="v19TrList"></div>'
+    ].join("");
+    pane.insertBefore(box, pane.firstChild);
+
+    var card = document.getElementById("v19TrCard");
+    card.addEventListener("input", function () {
+      var d = v19Digits(card.value).slice(0, 16), out = "", i;
+      for (i = 0; i < d.length; i++) { if (i && i % 4 === 0) out += " "; out += d[i]; }
+      card.value = out;
+      v19Lookup();
+    });
+    var btns = box.querySelectorAll("[data-trq]"), i;
+    for (i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", function () {
+        var v = this.getAttribute("data-trq");
+        var u = current;
+        document.getElementById("v19TrSum").value =
+          v === "all" ? Math.max(0, Math.floor((u && u.balance) || 0)) : v;
+      });
+    }
+    document.getElementById("v19TrGo").addEventListener("click", v19DoTransfer);
+    v19LoadTransfers();
+  }
+
+  function v19Lookup() {
+    var who = document.getElementById("v19TrWho");
+    var card = document.getElementById("v19TrCard");
+    if (!who || !card) return;
+    var d = v19Digits(card.value);
+    if (d.length < 16) { who.textContent = ""; who.className = "v19-who"; return; }
+    var loc = v19FindByCard(d);
+    if (loc) {
+      who.className = "v19-who v19-ok";
+      who.textContent = "Получатель: " + v19Name(loc);
+      return;
+    }
+    var srv = v19Srv();
+    if (srv && srv.cardLookup) {
+      who.className = "v19-who";
+      who.textContent = "Проверяем...";
+      srv.cardLookup(d).then(function (r) {
+        if (r && r.name) {
+          who.className = "v19-who v19-ok";
+          who.textContent = "Получатель: " + r.name;
+        } else {
+          who.className = "v19-who v19-bad";
+          who.textContent = "Карта не найдена";
+        }
+      }).catch(function () {
+        who.className = "v19-who v19-bad";
+        who.textContent = "Карта не найдена";
+      });
+    } else {
+      who.className = "v19-who v19-bad";
+      who.textContent = "Карта не найдена";
+    }
+  }
+
+  function v19PushTx(u, title, sub, amount) {
+    try { pushTx(u, title, sub, amount); return; } catch (e) {}
+    u.tx = u.tx || [];
+    u.tx.unshift({ t: title, s: sub, a: amount, ts: Date.now() });
+  }
+
+  function v19DoTransfer() {
+    var u = current;
+    if (!u) { v19Toast("Сначала войдите в аккаунт", "bad"); return; }
+    var card = v19Digits((document.getElementById("v19TrCard") || {}).value);
+    var sum = Math.floor(Number(v19Digits((document.getElementById("v19TrSum") || {}).value)) || 0);
+    var note = ((document.getElementById("v19TrNote") || {}).value || "").slice(0, 60);
+    if (card.length !== 16) { v19Toast("Нужно 16 цифр карты", "bad"); return; }
+    if (sum <= 0) { v19Toast("Укажите сумму", "bad"); return; }
+    if (sum > (u.balance || 0)) { v19Toast("Недостаточно средств", "bad"); return; }
+    if (u.card && v19Digits(u.card.number) === card) { v19Toast("Это ваша же карта", "bad"); return; }
+
+    function local() {
+      var all = loadUsers(), to = null, k;
+      for (k in all) {
+        if (all.hasOwnProperty(k) && all[k] && all[k].card && v19Digits(all[k].card.number) === card) { to = all[k]; break; }
+      }
+      if (!to) { v19Toast("Карта не найдена", "bad"); return false; }
+      u.balance = (u.balance || 0) - sum;
+      to.balance = (to.balance || 0) + sum;
+      v19PushTx(u, "Перевод " + v19Name(to), note || ("Карта •••• " + card.slice(-4)), -sum);
+      to.tx = to.tx || [];
+      to.tx.unshift({ t: "Поступление от " + v19Name(u), s: note || "Перевод", a: sum, ts: Date.now() });
+      all[u.id] = u; all[to.id] = to;
+      try { saveUsers(all); } catch (e) { saveUser(u); saveUser(to); }
+      v19Ledger({ dir: "out", name: v19Name(to), sum: sum, note: note, ts: Date.now() });
+      render(u, true);
+      v19Toast("Переведено " + v19Cash(sum), "ok");
+      v19LoadTransfers();
+      return true;
+    }
+
+    var srv = v19Srv();
+    if (srv && srv.transfer && v19Online()) {
+      srv.transfer(card, sum, note).then(function (r) {
+        if (r && r.ok) {
+          u.balance = (u.balance || 0) - sum;
+          v19PushTx(u, "Перевод " + (r.name || "клиенту"), note || ("Карта •••• " + card.slice(-4)), -sum);
+          saveUser(u); render(u, true);
+          v19Ledger({ dir: "out", name: r.name || "Клиент", sum: sum, note: note, ts: Date.now() });
+          v19Toast("Переведено " + v19Cash(sum), "ok");
+          v19LoadTransfers();
+          if (srv.syncNow) setTimeout(function () { srv.syncNow(true); }, 700);
+        } else if (r && r.error === "low_balance") {
+          v19Toast("Недостаточно средств", "bad");
+        } else { local(); }
+      }).catch(function () { local(); });
+    } else { local(); }
+  }
+
+  function v19Ledger(item) {
+    var u = current;
+    if (!u) return;
+    u.v19tr = u.v19tr || [];
+    u.v19tr.unshift(item);
+    if (u.v19tr.length > 40) u.v19tr.length = 40;
+    saveUser(u);
+  }
+
+  function v19LoadTransfers() {
+    var box = document.getElementById("v19TrList");
+    if (!box) return;
+    var u = current, rows = (u && u.v19tr) || [];
+    if (!rows.length) {
+      box.innerHTML = '<div class="v19-empty">Переводов пока нет</div>';
+      return;
+    }
+    var h = "", i;
+    for (i = 0; i < Math.min(rows.length, 12); i++) {
+      var r = rows[i];
+      h += '<div class="v19-li"><span>' + v19Esc(r.name) +
+        (r.note ? ' <span style="opacity:.5">' + v19Esc(r.note) + "</span>" : "") +
+        '</span><b class="' + (r.dir === "out" ? "v19-bad" : "v19-ok") + '">' +
+        (r.dir === "out" ? "-" : "+") + v19Cash(r.sum) + "</b></div>";
+    }
+    box.innerHTML = h;
+  }
+
+  /* ---------- профиль: аватар, баннер, галочка ---------- */
+  function v19AvStyle(v) {
+    if (!v) return "linear-gradient(135deg,#5b7cff,#8b5cf6)";
+    if (String(v).indexOf("data:") === 0) return 'url("' + v + '") center/cover';
+    var m = String(v).split("|");
+    return m[0] || "linear-gradient(135deg,#5b7cff,#8b5cf6)";
+  }
+  function v19AvEmoji(v) {
+    var m = String(v || "").split("|");
+    return m.length > 1 ? m[1] : "";
+  }
+
+  function v19PaintProfile(u) {
+    u = u || current;
+    if (!u) return;
+    var pane = document.querySelector('.tabpane[data-pane="profile"]');
+    if (!pane) return;
+    var cover = pane.querySelector(".pr-cover");
+    if (cover && u.banner) {
+      cover.style.background = v19AvStyle(u.banner);
+      cover.style.backgroundSize = "cover";
+    }
+    var av = document.getElementById("prAvatar");
+    if (av) {
+      if (u.avatar) {
+        av.style.background = v19AvStyle(u.avatar);
+        av.style.backgroundSize = "cover";
+        var em = v19AvEmoji(u.avatar);
+        if (em) { av.textContent = em; av.style.fontSize = "34px"; }
+      }
+    }
+    var un = document.getElementById("prUser");
+    if (un && u.verified && un.innerHTML.indexOf("v19-tick") < 0) un.innerHTML += v19TickSvg();
+    if (!document.getElementById("v19PrBtns")) {
+      var host = un ? (un.parentNode || pane) : pane;
+      var row = document.createElement("div");
+      row.className = "v19-prb";
+      row.id = "v19PrBtns";
+      row.innerHTML = [
+        '<button class="v19-chip" id="v19AvBtn" type="button">Сменить аватарку</button>',
+        '<button class="v19-chip" id="v19BnBtn" type="button">Сменить баннер</button>',
+        '<button class="v19-chip" id="v19VerBtn" type="button">Верификация аукционера — 1 млрд</button>'
+      ].join("");
+      host.appendChild(row);
+      document.getElementById("v19AvBtn").addEventListener("click", v19PickAvatar);
+      document.getElementById("v19BnBtn").addEventListener("click", v19PickBanner);
+      document.getElementById("v19VerBtn").addEventListener("click", v19BuyVerified);
+    }
+    var vb = document.getElementById("v19VerBtn");
+    if (vb && u.verified) { vb.textContent = "Аукционер подтверждён"; vb.disabled = true; vb.style.opacity = ".6"; }
+  }
+
+  function v19SaveProfile() {
+    var u = current;
+    if (!u) return;
+    saveUser(u);
+    v19PaintProfile(u);
+    var srv = v19Srv();
+    if (srv && srv.setProfile && v19Online()) {
+      srv.setProfile(u.avatar, u.banner, v19Name(u)).catch(function () {});
+      if (srv.syncNow) setTimeout(function () { srv.syncNow(true); }, 600);
+    }
+  }
+
+  function v19PickAvatar() {
+    var u = current;
+    if (!u) return;
+    var grads = [
+      "linear-gradient(135deg,#5b7cff,#8b5cf6)|", "linear-gradient(135deg,#22c55e,#0ea5e9)|",
+      "linear-gradient(135deg,#f97316,#ef4444)|", "linear-gradient(135deg,#ec4899,#8b5cf6)|",
+      "linear-gradient(135deg,#facc15,#f97316)|", "linear-gradient(135deg,#14b8a6,#22c55e)|",
+      "linear-gradient(135deg,#64748b,#0f172a)|", "linear-gradient(135deg,#a855f7,#3b82f6)|",
+      "linear-gradient(135deg,#f43f5e,#f59e0b)|", "linear-gradient(135deg,#0ea5e9,#6366f1)|",
+      "linear-gradient(135deg,#84cc16,#10b981)|", "linear-gradient(135deg,#d946ef,#f43f5e)|"
+    ];
+    var h = '<div class="v19-sub" style="margin-top:8px">Выберите вариант или загрузите свою картинку</div><div class="v19-pick">';
+    var i;
+    for (i = 0; i < grads.length; i++) {
+      h += '<div class="v19-pi" data-av="' + v19Esc(grads[i]) + '" style="background:' + grads[i].split("|")[0] + '"></div>';
+    }
+    h += '</div><div class="v19-row" style="margin-top:14px"><input type="file" accept="image/*" id="v19AvFile"></div>';
+    v19Modal("Аватарка", h, function (ov, close) {
+      var items = ov.querySelectorAll("[data-av]"), i;
+      for (i = 0; i < items.length; i++) {
+        items[i].addEventListener("click", function () {
+          u.avatar = this.getAttribute("data-av");
+          v19SaveProfile();
+          v19Toast("Аватарка обновлена", "ok");
+          close();
+        });
+      }
+      var f = ov.querySelector("#v19AvFile");
+      f.addEventListener("change", function () {
+        var file = f.files && f.files[0];
+        if (!file) return;
+        if (file.size > 900000) { v19Toast("Файл больше 900 КБ", "bad"); return; }
+        var fr = new FileReader();
+        fr.onload = function () {
+          u.avatar = String(fr.result);
+          v19SaveProfile();
+          v19Toast("Аватарка обновлена", "ok");
+          close();
+        };
+        fr.readAsDataURL(file);
+      });
+    });
+  }
+
+  function v19PickBanner() {
+    var u = current;
+    if (!u) return;
+    var bn = [
+      "linear-gradient(120deg,#0f172a,#5b7cff)", "linear-gradient(120deg,#7c3aed,#ec4899)",
+      "linear-gradient(120deg,#0ea5e9,#22c55e)", "linear-gradient(120deg,#f97316,#facc15)",
+      "linear-gradient(120deg,#111827,#374151)", "linear-gradient(120deg,#be123c,#f97316)",
+      "linear-gradient(120deg,#065f46,#84cc16)", "linear-gradient(120deg,#1e1b4b,#a855f7)"
+    ];
+    var h = '<div class="v19-pick" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">', i;
+    for (i = 0; i < bn.length; i++) {
+      h += '<div class="v19-bn" data-bn="' + v19Esc(bn[i]) + '" style="background:' + bn[i] + '"></div>';
+    }
+    h += '</div><div class="v19-row" style="margin-top:14px"><input type="file" accept="image/*" id="v19BnFile"></div>';
+    v19Modal("Баннер профиля", h, function (ov, close) {
+      var items = ov.querySelectorAll("[data-bn]"), i;
+      for (i = 0; i < items.length; i++) {
+        items[i].addEventListener("click", function () {
+          u.banner = this.getAttribute("data-bn");
+          v19SaveProfile();
+          v19Toast("Баннер обновлён", "ok");
+          close();
+        });
+      }
+      var f = ov.querySelector("#v19BnFile");
+      f.addEventListener("change", function () {
+        var file = f.files && f.files[0];
+        if (!file) return;
+        if (file.size > 900000) { v19Toast("Файл больше 900 КБ", "bad"); return; }
+        var fr = new FileReader();
+        fr.onload = function () {
+          u.banner = String(fr.result);
+          v19SaveProfile();
+          close();
+        };
+        fr.readAsDataURL(file);
+      });
+    });
+  }
+
+  function v19BuyVerified() {
+    var u = current;
+    if (!u) return;
+    if (u.verified) { v19Toast("Вы уже верифицированы", "ok"); return; }
+    if ((u.balance || 0) < V19_VER_COST) {
+      v19Toast("Нужно " + v19Cash(V19_VER_COST), "bad");
+      return;
+    }
+    if (!window.confirm("Купить верификацию аукционера за 1 млрд ₽?")) return;
+    u.balance -= V19_VER_COST;
+    u.verified = true;
+    v19PushTx(u, "Верификация аукционера", "Статус подтверждён", -V19_VER_COST);
+    saveUser(u);
+    render(u, true);
+    var srv = v19Srv();
+    if (srv && srv.buyVerified && v19Online()) srv.buyVerified().catch(function () {});
+    v19PaintProfile(u);
+    v19Toast("Галочка добавлена в профиль", "ok");
+    v19LoadLots();
+  }
+
+  /* ---------- аукцион от игроков ---------- */
+  function v19Lots() {
+    try { return JSON.parse(localStorage.getItem(V19_LOTS_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function v19SaveLots(a) {
+    try { localStorage.setItem(V19_LOTS_KEY, JSON.stringify(a)); } catch (e) {}
+  }
+
+  function v19BuildAuction() {
+    var pane = document.querySelector('.tabpane[data-pane="auction"]');
+    if (!pane || document.getElementById("v19AucPanel")) return;
+    var old = document.getElementById("aucSeg"); if (old && old.parentNode) old.parentNode.removeChild(old);
+    var grid = document.getElementById("aucGrid"); if (grid && grid.parentNode) grid.parentNode.removeChild(grid);
+    var nx = document.getElementById("aucNext");
+    if (nx) nx.textContent = "Лоты выставляют сами игроки";
+    var box = document.createElement("section");
+    box.id = "v19AucPanel";
+    box.innerHTML = [
+      '<section class="v19-card">',
+      '<div class="v19-h"><b>Выставить лот</b>',
+      '<span class="v19-sub">только верифицированные</span></div>',
+      '<div class="v19-row"><select class="v19-in" id="v19LotItem"></select>',
+      '<input class="v19-in" id="v19LotPrice" inputmode="numeric" placeholder="Цена">',
+      '<button class="v19-b g" id="v19LotGo" type="button">На аукцион</button></div>',
+      '<div class="v19-who" id="v19LotHint"></div>',
+      '<div class="v19-list" id="v19MyLots"></div>',
+      '</section>',
+      '<section class="v19-card"><div class="v19-h"><b>Лоты игроков</b></div>',
+      '<div class="v19-grid" id="v19LotGrid"></div></section>'
+    ].join("");
+    pane.appendChild(box);
+    document.getElementById("v19LotGo").addEventListener("click", v19CreateLot);
+    v19FillLotItems();
+    v19LoadLots();
+  }
+
+  function v19FillLotItems() {
+    var sel = document.getElementById("v19LotItem");
+    var u = current;
+    if (!sel) return;
+    var opts = [], i;
+    if (u) {
+      if (u.username) opts.push({ k: "name", v: u.username, t: "@" + u.username });
+      var on = u.ownNames || [];
+      for (i = 0; i < on.length; i++) opts.push({ k: "name", v: String(on[i]).replace(/^@/, ""), t: "@" + String(on[i]).replace(/^@/, "") });
+      var nm = u.ownNums || [];
+      for (i = 0; i < nm.length; i++) opts.push({ k: "num", v: nm[i], t: String(nm[i]) });
+    }
+    if (!opts.length) {
+      sel.innerHTML = '<option value="">Нет предметов для продажи</option>';
+      return;
+    }
+    var h = "";
+    for (i = 0; i < opts.length; i++) {
+      h += '<option value="' + opts[i].k + ":" + v19Esc(opts[i].v) + '">' + v19Esc(opts[i].t) + "</option>";
+    }
+    sel.innerHTML = h;
+  }
+
+  function v19CreateLot() {
+    var u = current;
+    var hint = document.getElementById("v19LotHint");
+    if (!u) return;
+    if (!u.verified) {
+      if (hint) { hint.className = "v19-who v19-bad"; hint.textContent = "Нужна верификация аукционера (1 млрд ₽)"; }
+      v19BuyVerified();
+      return;
+    }
+    var raw = (document.getElementById("v19LotItem") || {}).value || "";
+    var price = Math.floor(Number(v19Digits((document.getElementById("v19LotPrice") || {}).value)) || 0);
+    if (!raw) { if (hint) { hint.className = "v19-who v19-bad"; hint.textContent = "Нет предмета"; } return; }
+    if (price <= 0) { if (hint) { hint.className = "v19-who v19-bad"; hint.textContent = "Укажите цену"; } return; }
+    var p = raw.split(":"), kind = p[0], item = p.slice(1).join(":");
+    var lots = v19Lots(), i;
+    for (i = 0; i < lots.length; i++) {
+      if (!lots[i].sold && lots[i].item === item) {
+        if (hint) { hint.className = "v19-who v19-bad"; hint.textContent = "Уже выставлено"; }
+        return;
+      }
+    }
+    lots.unshift({
+      id: "L" + Date.now() + Math.floor(Math.random() * 999),
+      seller: u.id, sellerName: v19Name(u), sellerUser: u.username || "",
+      kind: kind, item: item, price: price, ts: Date.now(), sold: false
+    });
+    v19SaveLots(lots);
+    var srv = v19Srv();
+    if (srv && srv.lotCreate && v19Online()) srv.lotCreate(kind, item, price, "").catch(function () {});
+    if (hint) { hint.className = "v19-who v19-ok"; hint.textContent = "Лот выставлен"; }
+    v19LoadLots();
+  }
+
+  function v19LoadLots() {
+    var grid = document.getElementById("v19LotGrid");
+    var mine = document.getElementById("v19MyLots");
+    if (!grid) return;
+    var lots = v19Lots(), u = current, h = "", mh = "", i, shown = 0;
+    for (i = 0; i < lots.length; i++) {
+      var L = lots[i];
+      if (L.sold) continue;
+      var own = u && L.seller === u.id;
+      var title = L.kind === "name" ? "@" + L.item : L.item;
+      shown++;
+      h += '<div class="v19-lot"><div class="t">' + v19Esc(title) + "</div>" +
+        '<div class="p">' + v19Esc(L.sellerName) + "</div>" +
+        '<div style="font-weight:700;margin-bottom:10px">' + v19Cash(L.price) + "</div>" +
+        (own
+          ? '<button class="v19-b x" data-lotdel="' + L.id + '" type="button">Снять</button>'
+          : '<button class="v19-b" data-lotbuy="' + L.id + '" type="button">Купить</button>') +
+        "</div>";
+      if (own) mh += '<div class="v19-li"><span>' + v19Esc(title) + "</span><b>" + v19Cash(L.price) + "</b></div>";
+    }
+    grid.innerHTML = shown ? h : '<div class="v19-empty">Лотов пока нет — выставьте первый</div>';
+    if (mine) mine.innerHTML = mh;
+    var b = grid.querySelectorAll("[data-lotbuy]"), j;
+    for (j = 0; j < b.length; j++) {
+      b[j].addEventListener("click", function () { v19BuyLot(this.getAttribute("data-lotbuy")); });
+    }
+    var d = grid.querySelectorAll("[data-lotdel]"), k;
+    for (k = 0; k < d.length; k++) {
+      d[k].addEventListener("click", function () { v19CancelLot(this.getAttribute("data-lotdel")); });
+    }
+  }
+
+  function v19BuyLot(id) {
+    var u = current;
+    if (!u) return;
+    var lots = v19Lots(), i, L = null;
+    for (i = 0; i < lots.length; i++) if (lots[i].id === id) L = lots[i];
+    if (!L || L.sold) { v19Toast("Лот недоступен", "bad"); return; }
+    if ((u.balance || 0) < L.price) { v19Toast("Недостаточно средств", "bad"); return; }
+    u.balance -= L.price;
+    if (L.kind === "name") {
+      u.ownNames = u.ownNames || [];
+      u.ownNames.push(L.item);
+    } else {
+      u.ownNums = u.ownNums || [];
+      u.ownNums.push(L.item);
+    }
+    v19PushTx(u, "Покупка на аукционе", L.kind === "name" ? "@" + L.item : L.item, -L.price);
+    var all = loadUsers();
+    if (all[L.seller]) {
+      all[L.seller].balance = (all[L.seller].balance || 0) + L.price;
+      all[L.seller].tx = all[L.seller].tx || [];
+      all[L.seller].tx.unshift({ t: "Продажа на аукционе", s: L.kind === "name" ? "@" + L.item : L.item, a: L.price, ts: Date.now() });
+      if (L.kind === "name" && all[L.seller].ownNames) {
+        all[L.seller].ownNames = all[L.seller].ownNames.filter(function (x) { return String(x).replace(/^@/, "") !== L.item; });
+      }
+      if (L.kind === "num" && all[L.seller].ownNums) {
+        all[L.seller].ownNums = all[L.seller].ownNums.filter(function (x) { return String(x) !== L.item; });
+      }
+    }
+    all[u.id] = u;
+    try { saveUsers(all); } catch (e) { saveUser(u); }
+    L.sold = true; L.buyer = u.id;
+    v19SaveLots(lots);
+    var srv = v19Srv();
+    if (srv && srv.lotBuy && v19Online()) srv.lotBuy(id).catch(function () {});
+    render(u, true);
+    try { renderProfileTags(u); } catch (e) {}
+    v19Toast("Куплено", "ok");
+    v19LoadLots();
+    v19FillLotItems();
+  }
+
+  function v19CancelLot(id) {
+    var lots = v19Lots(), out = [], i;
+    for (i = 0; i < lots.length; i++) if (lots[i].id !== id) out.push(lots[i]);
+    v19SaveLots(out);
+    var srv = v19Srv();
+    if (srv && srv.lotCancel && v19Online()) srv.lotCancel(id).catch(function () {});
+    v19LoadLots();
+  }
+
+  /* ---------- админка ---------- */
+  function v19IsAdmin() {
+    var u = current;
+    return !!(u && (u.isAdmin || u.is_admin));
+  }
+
+  function v19BuildAdminPane() {
+    if (document.querySelector('.tabpane[data-pane="admin"]')) return;
+    var prof = document.querySelector('.tabpane[data-pane="profile"]');
+    if (!prof || !prof.parentNode) return;
+    var pane = document.createElement("section");
+    pane.className = "tabpane hidden";
+    pane.setAttribute("data-pane", "admin");
+    pane.innerHTML = [
+      '<section class="v19-card"><div class="v19-h"><b>Панель администратора</b>',
+      '<button class="v19-chip" id="v19AdmRe" type="button">Обновить</button></div>',
+      '<div class="v19-stats" id="v19AdmStats"></div></section>',
+      '<section class="v19-card"><div class="v19-h"><b>Игроки</b></div>',
+      '<div class="v19-row"><input class="v19-in" id="v19AdmQ" placeholder="Поиск по имени, юзернейму, телефону"></div>',
+      '<div id="v19AdmTable"></div></section>'
+    ].join("");
+    prof.parentNode.insertBefore(pane, prof.nextSibling);
+    document.getElementById("v19AdmRe").addEventListener("click", v19AdminLoad);
+    var q = document.getElementById("v19AdmQ");
+    q.addEventListener("input", function () { v19AdminLoad(); });
+  }
+
+  function v19AdminEnable() {
+    if (!v19IsAdmin()) return;
+    v19BuildAdminPane();
+    try {
+      var i, has = false;
+      for (i = 0; i < SIDE_CATS.length; i++) if (SIDE_CATS[i].tab === "admin") has = true;
+      if (!has) {
+        SIDE_CATS.push({ tab: "admin", icon: "shield", label: "Админка" });
+        buildSideNav();
+        paintIcons();
+      }
+    } catch (e) { console.warn("v19 admin nav", e); }
+    v19AdminLoad();
+  }
+
+  function v19AdminLoad() {
+    var st = document.getElementById("v19AdmStats");
+    var tb = document.getElementById("v19AdmTable");
+    if (!st || !tb) return;
+    var all = loadUsers(), keys = [], k;
+    for (k in all) if (all.hasOwnProperty(k)) keys.push(k);
+    var money0 = 0, ver = 0, ban = 0, i;
+    for (i = 0; i < keys.length; i++) {
+      var u = all[keys[i]];
+      money0 += Number(u.balance || 0);
+      if (u.verified) ver++;
+      if (u.banned) ban++;
+    }
+    var lots = v19Lots(), open = 0, sold = 0;
+    for (i = 0; i < lots.length; i++) { if (lots[i].sold) sold++; else open++; }
+    st.innerHTML = [
+      ['<div class="v19-stat"><b>', keys.length, '</b><span>Игроков</span></div>'].join(""),
+      ['<div class="v19-stat"><b>', ver, '</b><span>Верифицировано</span></div>'].join(""),
+      ['<div class="v19-stat"><b>', ban, '</b><span>Заблокировано</span></div>'].join(""),
+      ['<div class="v19-stat"><b>', v19Cash(money0), '</b><span>Всего на балансах</span></div>'].join(""),
+      ['<div class="v19-stat"><b>', open, '</b><span>Лотов открыто</span></div>'].join(""),
+      ['<div class="v19-stat"><b>', sold, '</b><span>Лотов продано</span></div>'].join("")
+    ].join("");
+
+    var q = ((document.getElementById("v19AdmQ") || {}).value || "").toLowerCase();
+    var rows = "", n = 0;
+    for (i = 0; i < keys.length; i++) {
+      var p = all[keys[i]];
+      var hay = (v19Name(p) + " " + (p.username || "") + " " + (p.id || "") + " " + (p.phone || "")).toLowerCase();
+      if (q && hay.indexOf(q) < 0) continue;
+      if (n++ > 60) break;
+      rows += "<tr><td>" + v19Esc(v19Name(p)) + (p.verified ? " " + v19TickSvg() : "") +
+        '<div style="opacity:.55;font-size:12px">' + v19Esc(p.username ? "@" + p.username : p.id) + "</div></td>" +
+        "<td>" + v19Cash(p.balance || 0) + "</td>" +
+        '<td style="white-space:nowrap">' +
+        '<button class="v19-chip" data-adm="bal" data-id="' + v19Esc(p.id) + '">Баланс</button> ' +
+        '<button class="v19-chip" data-adm="ver" data-id="' + v19Esc(p.id) + '">Галочка</button> ' +
+        '<button class="v19-chip" data-adm="ban" data-id="' + v19Esc(p.id) + '">' + (p.banned ? "Разбан" : "Бан") + "</button> " +
+        '<button class="v19-chip" data-adm="del" data-id="' + v19Esc(p.id) + '">Удалить</button></td></tr>';
+    }
+    tb.innerHTML = '<table class="v19-tbl"><tr><th>Игрок</th><th>Баланс</th><th></th></tr>' +
+      (rows || '<tr><td colspan="3" class="v19-empty">Ничего не найдено</td></tr>') + "</table>";
+    var bs = tb.querySelectorAll("[data-adm]"), j;
+    for (j = 0; j < bs.length; j++) {
+      bs[j].addEventListener("click", function () {
+        v19AdminAction(this.getAttribute("data-adm"), this.getAttribute("data-id"));
+      });
+    }
+  }
+
+  function v19AdminAction(act, id) {
+    var all = loadUsers(), p = all[id];
+    if (!p) return;
+    var srv = v19Srv();
+    if (act === "bal") {
+      var v = window.prompt("Новый баланс для " + v19Name(p), String(Math.floor(p.balance || 0)));
+      if (v === null) return;
+      p.balance = Number(v19Digits(v)) || 0;
+      if (srv && srv.adminSet && v19Online()) srv.adminSet(id, "balance", String(p.balance)).catch(function () {});
+    } else if (act === "ver") {
+      p.verified = !p.verified;
+      if (srv && srv.adminSet && v19Online()) srv.adminSet(id, "verified", p.verified ? "1" : "0").catch(function () {});
+    } else if (act === "ban") {
+      p.banned = !p.banned;
+      if (srv && srv.adminSet && v19Online()) srv.adminSet(id, "banned", p.banned ? "1" : "0").catch(function () {});
+    } else if (act === "del") {
+      if (!window.confirm("Удалить " + v19Name(p) + "?")) return;
+      delete all[id];
+      if (srv && srv.adminDelete && v19Online()) srv.adminDelete(id).catch(function () {});
+      try { saveUsers(all); } catch (e) {}
+      v19AdminLoad();
+      return;
+    }
+    all[id] = p;
+    try { saveUsers(all); } catch (e) { saveUser(p); }
+    if (current && current.id === id) { current = p; render(current, true); }
+    v19AdminLoad();
+  }
+
+  /* ---------- апгрейд подарков: убрать навсегда ---------- */
+  function v19KillUpgrade() {
+    var ids = ["upGrid", "up16Roll", "up16Track", "up17Fee"], i;
+    for (i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (!el) continue;
+      var host = el.closest ? el.closest("section, .card, .panel") : null;
+      if (host && host.parentNode) host.parentNode.removeChild(host);
+      else if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    try { renderUpgrade = function () {}; } catch (e) {}
+  }
+
+  function v19Init2() {
+    v19Css();
+    v19KillUpgrade();
+    v19BuildTransfer();
+    v19BuildAuction();
+    v19PaintProfile(current);
+    v19AdminEnable();
+    setTimeout(function () {
+      v19KillUpgrade();
+      v19LoadLots();
+      v19LoadTransfers();
+      v19FillLotItems();
+    }, 900);
+  }
+
+  var _v19Render = render;
+  render = function (u, bump) {
+    var r = _v19Render(u, bump);
+    try { v19KillUpgrade(); } catch (e) {}
+    try { v19PaintProfile(u); } catch (e) {}
+    return r;
+  };
+
+  /* v19: самозапуск внутри основного скрипта */
+  function v19Boot() {
+    try { v19RegInit(); } catch (e) { console.warn("v19 reg", e); }
+    try { v19Init2(); } catch (e) { console.warn("v19 init", e); }
+    var rf = document.getElementById("regForm");
+    if (rf && !rf.__v19) {
+      rf.__v19 = 1;
+      rf.addEventListener("submit", function () {
+        setTimeout(function () {
+          try { v19ApplyIdentity(); } catch (e) {}
+          try { v19Init2(); } catch (e) {}
+        }, 420);
+      });
+    }
+    var lf = document.getElementById("loginForm");
+    if (lf && !lf.__v19) {
+      lf.__v19 = 1;
+      lf.addEventListener("submit", function () {
+        setTimeout(function () { try { v19Init2(); } catch (e) {} }, 520);
+      });
+    }
+  }
+  window.__v19 = {
+    boot: function () { v19Boot(); },
+    init2: function () { try { v19Init2(); } catch (e) {} },
+    identity: function () { try { v19ApplyIdentity(); } catch (e) {} },
+    profile: function (u) { try { v19PaintProfile(u); } catch (e) {} }
+  };
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () { setTimeout(v19Boot, 60); });
+  } else {
+    setTimeout(v19Boot, 60);
+  }
+  setTimeout(v19Boot, 1400);
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+
+/* SlimBANK polish layer: tilt, pointer glow, scroll progress, stagger */
+(function () {
+  "use strict";
+  var reduce = false;
+  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  function ready(fn) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+
+  ready(function () {
+    /* ---- scroll progress + sticky header ---- */
+    var bar = document.createElement("div");
+    bar.id = "scrollProgress";
+    document.body.appendChild(bar);
+    var header = document.getElementById("siteHeader");
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(function () {
+        var h = document.documentElement;
+        var max = (h.scrollHeight - h.clientHeight) || 1;
+        var p = Math.min(100, Math.max(0, (h.scrollTop || window.pageYOffset) / max * 100));
+        bar.style.width = p + "%";
+        if (header) header.classList.toggle("scrolled", (h.scrollTop || window.pageYOffset) > 12);
+        ticking = false;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    /* ---- stagger reveal delays ---- */
+    function stagger() {
+      var groups = document.querySelectorAll(".grid-3, .grid-2, .inv-grid");
+      Array.prototype.forEach.call(groups, function (g) {
+        var kids = g.querySelectorAll(":scope > .reveal");
+        Array.prototype.forEach.call(kids, function (k, i) {
+          k.style.setProperty("--rd", (i * 90) + "ms");
+        });
+      });
+    }
+    try { stagger(); } catch (e) {}
+
+    if (reduce) return;
+
+    /* ---- pointer glow on surfaces ---- */
+    document.addEventListener("pointermove", function (e) {
+      var el = e.target && e.target.closest ? e.target.closest(".card, .panel") : null;
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      el.style.setProperty("--my", (e.clientY - r.top) + "px");
+    }, { passive: true });
+
+    /* ---- 3D tilt ---- */
+    function tilt(el, maxDeg, scale) {
+      if (!el) return;
+      var raf = null, tx = 0, ty = 0, cur = { x: 0, y: 0 }, active = false;
+      function loop() {
+        cur.x += (tx - cur.x) * 0.14;
+        cur.y += (ty - cur.y) * 0.14;
+        el.style.transform = "perspective(1400px) rotateX(" + cur.y.toFixed(2) + "deg) rotateY(" +
+          cur.x.toFixed(2) + "deg) scale(" + (active ? scale : 1) + ")";
+        if (Math.abs(tx - cur.x) > 0.01 || Math.abs(ty - cur.y) > 0.01) raf = window.requestAnimationFrame(loop);
+        else { raf = null; if (!active) el.style.transform = ""; }
+      }
+      function kick() { if (!raf) raf = window.requestAnimationFrame(loop); }
+      el.addEventListener("pointermove", function (e) {
+        var r = el.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        active = true;
+        tx = px * maxDeg * 2;
+        ty = -py * maxDeg * 2;
+        kick();
+      }, { passive: true });
+      el.addEventListener("pointerleave", function () {
+        active = false; tx = 0; ty = 0; kick();
+      }, { passive: true });
+    }
+
+    tilt(document.getElementById("cardFlip"), 9, 1.03);
+    var stage = document.querySelector(".card-stage");
+    if (stage) {
+      var front = stage.querySelector(".cardv.is-front");
+      var back = stage.querySelector(".cardv.is-back");
+      stage.addEventListener("pointermove", function (e) {
+        var r = stage.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width - 0.5;
+        var py = (e.clientY - r.top) / r.height - 0.5;
+        if (front) {
+          front.style.animation = "none";
+          front.style.transform = "rotate(-4deg) translateY(8px) rotateX(" + (-py * 12).toFixed(2) +
+            "deg) rotateY(" + (px * 14).toFixed(2) + "deg) translateZ(24px)";
+        }
+        if (back) {
+          back.style.animation = "none";
+          back.style.transform = "rotate(6deg) rotateX(" + (-py * 7).toFixed(2) +
+            "deg) rotateY(" + (px * 8).toFixed(2) + "deg)";
+        }
+      }, { passive: true });
+      stage.addEventListener("pointerleave", function () {
+        [front, back].forEach(function (c) {
+          if (!c) return;
+          c.style.transform = "";
+          c.style.animation = "";
+        });
+      }, { passive: true });
+    }
+
+    /* ---- magnetic primary buttons ---- */
+    document.addEventListener("pointermove", function (e) {
+      var b = e.target && e.target.closest ? e.target.closest(".btn-primary, .btn-dark") : null;
+      if (!b || b.disabled) return;
+      var r = b.getBoundingClientRect();
+      var dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+      var dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+      b.style.transform = "translate(" + (dx * 5).toFixed(1) + "px," + (dy * 4 - 2).toFixed(1) + "px) scale(1.02)";
+      b.__mag = 1;
+    }, { passive: true });
+    document.addEventListener("pointerout", function (e) {
+      var b = e.target && e.target.closest ? e.target.closest(".btn-primary, .btn-dark") : null;
+      if (b && b.__mag) { b.style.transform = ""; b.__mag = 0; }
+    }, { passive: true });
+  });
+})();
+
+/* SlimBANK polish layer 2: card cinema + smoother motion */
+(function () {
+  "use strict";
+  var reduce = false;
+  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+
+  function ready(fn) {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  }
+
+  function decorate(card, withNfc) {
+    if (!card || card.__deco) return;
+    card.__deco = 1;
+    var glare = document.createElement("span");
+    glare.className = "card-glare";
+    card.appendChild(glare);
+    var sweep = document.createElement("span");
+    sweep.className = "card-sweep";
+    card.appendChild(sweep);
+    if (withNfc) {
+      var nfc = document.createElement("span");
+      nfc.className = "card-nfc";
+      nfc.innerHTML = "<i></i><i></i><i></i>";
+      card.appendChild(nfc);
+    }
+  }
+
+  ready(function () {
+    var fronts = document.querySelectorAll(".cardv.front, .cardv.is-front");
+    Array.prototype.forEach.call(fronts, function (c) { decorate(c, true); });
+    var backs = document.querySelectorAll(".cardv.is-back");
+    Array.prototype.forEach.call(backs, function (c) { decorate(c, false); });
+
+    /* theme change pop */
+    var pickers = document.querySelectorAll("#themePicker2 .swatch, #themePicker .swatch");
+    Array.prototype.forEach.call(pickers, function (b) {
+      b.addEventListener("click", function () {
+        var targets = document.querySelectorAll("#cardFront, #cardRear");
+        Array.prototype.forEach.call(targets, function (c) {
+          c.classList.remove("theme-pop");
+          void c.offsetWidth;
+          c.classList.add("theme-pop");
+        });
+      });
+    });
+
+    if (reduce) return;
+
+    /* glare follows the pointer over any card surface */
+    function glareMove(e) {
+      var card = e.target && e.target.closest ? e.target.closest(".cardv") : null;
+      if (!card) return;
+      var g = card.querySelector(".card-glare");
+      if (!g) return;
+      var r = card.getBoundingClientRect();
+      g.style.setProperty("--gx", (e.clientX - r.left) + "px");
+      g.style.setProperty("--gy", (e.clientY - r.top) + "px");
+    }
+    document.addEventListener("pointermove", glareMove, { passive: true });
+
+    /* keep flip rotation in a CSS var so :active scale keeps the face */
+    var flip = document.getElementById("cardFlip");
+    if (flip) {
+      var sync = function () {
+        flip.style.setProperty("--fr", flip.classList.contains("flipped") ? "180deg" : "0deg");
+      };
+      flip.addEventListener("click", function () { window.setTimeout(sync, 0); });
+      sync();
+    }
+
+    /* soft parallax for the landing card stack on page scroll */
+    var stage = document.querySelector(".card-stage");
+    if (stage) {
+      var raf = null;
+      window.addEventListener("scroll", function () {
+        if (raf) return;
+        raf = window.requestAnimationFrame(function () {
+          raf = null;
+          var r = stage.getBoundingClientRect();
+          if (r.bottom < 0 || r.top > window.innerHeight) return;
+          var k = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;
+          stage.style.transform = "translateY(" + (k * -22).toFixed(1) + "px)";
+        });
+      }, { passive: true });
+    }
+  });
+})();
+
+/* ---------- polish layer 3: icon injection + light/dark switch ---------- */
+(function () {
+  var THEME_KEY = "slimbank_theme_v1";
+
+  function paintIcons(root) {
+    var scope = root || document;
+    var nodes = scope.querySelectorAll("[data-icon]");
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (el.getAttribute("data-icon-done") === "1") continue;
+      el.innerHTML = ic(el.getAttribute("data-icon"));
+      el.setAttribute("data-icon-done", "1");
+    }
+  }
+
+  function applyTheme(dark, animate) {
+    document.body.classList.toggle("dark", !!dark);
+    var btn = document.getElementById("themeToggle");
+    if (btn) {
+      var sun = btn.querySelector(".i-sun");
+      var moon = btn.querySelector(".i-moon");
+      if (sun && moon) {
+        sun.classList.toggle("off", !dark);
+        moon.classList.toggle("off", !!dark);
+      }
+      var lbl = btn.querySelector(".lbl");
+      if (lbl) lbl.textContent = dark ? "\u0421\u0432\u0435\u0442\u043b\u0430\u044f \u0442\u0435\u043c\u0430" : "\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430";
+      if (animate) {
+        btn.classList.remove("pop");
+        void btn.offsetWidth;
+        btn.classList.add("pop");
+      }
+    }
+  }
+
+  function buildToggle() {
+    if (document.getElementById("themeToggle")) return;
+    var btn = document.createElement("button");
+    btn.id = "themeToggle";
+    btn.type = "button";
+    btn.setAttribute("aria-label", "\u0421\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u0435\u043c\u0443");
+    btn.innerHTML =
+      ic("moon", "i-moon") + ic("sun", "i-sun off") +
+      '<span class="lbl">\u0422\u0451\u043c\u043d\u0430\u044f \u0442\u0435\u043c\u0430</span>';
+    document.body.appendChild(btn);
+    btn.addEventListener("click", function () {
+      var next = !document.body.classList.contains("dark");
+      try { localStorage.setItem(THEME_KEY, next ? "dark" : "light"); } catch (e) {}
+      applyTheme(next, true);
+    });
+  }
+
+
   /* ============ мост для сервера (Supabase): безопасные хуки ============ */
   window.SLIM_HOOKS = {
     /* сервер прислал свежий профиль — подхватить его без перезагрузки */
@@ -9939,7 +10760,6 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   function boot() {
     paintIcons();
     buildToggle();
-    try { v19RegInit(); } catch (e) { console.warn("v19 reg", e); }
     var saved = null;
     try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
     var dark = saved ? saved === "dark"
