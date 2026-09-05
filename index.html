@@ -3401,7 +3401,7 @@ h1,h2{letter-spacing:-1.1px}
           </div>
           <div class="acts" style="margin-top:22px">
             <button class="act g" id="actTopUp"><span class="d">+</span>Пополнить счёт</button>
-            <button class="act o" id="actSpend"><span class="d">−</span>Потратить / перевести</button>
+            <button class="act o" id="actSpend"><span class="d">→</span>Перевести деньги</button>
             <button class="act" id="actToSavings"><span class="d">↑</span>Отложить на копилку</button>
             <button class="act p" id="actPlan"><span class="d">★</span>Сменить тариф</button>
           </div>
@@ -3675,19 +3675,6 @@ h1,h2{letter-spacing:-1.1px}
             </div>
           </article>
 
-          <article class="casino-card dice">
-            <div class="cc-head"><i data-icon="dice"></i><b>Кости</b><span class="pill">ровно 7 ×6</span></div>
-            <div class="dice-box">
-              <div class="die3" id="dice1"><span class="df"></span></div>
-              <div class="die3" id="dice2"><span class="df"></span></div>
-              <div class="dc-out" id="dcOut">Сумма 7</div>
-            </div>
-            <div class="rl-btns">
-              <button class="btn btn-ghost btn-sm ripple" data-dice="low" type="button">&lt; 7 ×2.3</button>
-              <button class="btn btn-primary btn-sm ripple" data-dice="seven" type="button">= 7 ×6</button>
-              <button class="btn btn-ghost btn-sm ripple" data-dice="high" type="button">&gt; 7 ×2.3</button>
-            </div>
-          </article>
         </div>
       </div>
 
@@ -10409,6 +10396,499 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
     try { v19PaintProfile(u); } catch (e) {}
     return r;
   };
+
+
+  /* ==================================================================
+     v20 - переводы в отдельной кнопке, надёжные промокоды,
+     рабочие аватарки/баннеры, уникальные юзернеймы
+     ================================================================== */
+  var V20_PROMOS = {
+    WTHJW:    { money: 1e17,     title: "Секретный код", note: "100 квадриллионов рублей на баланс" },
+    SLIM2026: { money: 500000,   title: "Стартовый бонус", note: "500 000 рублей на развитие" },
+    LUCKY777: { money: 7777777,  title: "Семёрки", note: "7 777 777 рублей на игру" },
+    GRAM888:  { money: 88888888, title: "GRAM акция", note: "88 888 888 рублей на счёт" },
+    BEARHUG:  { money: 0, gift: "bear", title: "Мишка в подарок", note: "Подарок Мишка в профиль" },
+    CREDITFIX:{ money: 0, score: 90, title: "Ремонт скоринга", note: "+90 баллов кредитного рейтинга" },
+    SLIMGIFT: { money: 25000000, title: "Подарок банка", note: "25 000 000 рублей на счёт" },
+    TRANSFER1:{ money: 1000000,  title: "На переводы", note: "1 000 000 рублей на счёт" }
+  };
+
+  function v20Digits(v) { return String(v == null ? "" : v).replace(/[^0-9]/g, ""); }
+  function v20Cash(n) { try { return money(n); } catch (e) { return String(Math.round(n || 0)); } }
+  function v20Say(t, sub, kind) { try { toast(t, sub || "", kind || "ok"); } catch (e) {} }
+  function v20Esc(t) {
+    return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function v20Name(u) {
+    if (!u) return "";
+    return ((u.first || "") + " " + (u.last || "")).trim() || ("@" + (u.username || ""));
+  }
+
+  /* ---------- аватарки и баннеры: жёсткое применение ---------- */
+  function v20Skin(v) {
+    var s = String(v || "");
+    if (!s) return null;
+    if (s.indexOf("data:") === 0 || s.indexOf("http") === 0) {
+      return { bg: 'url("' + s + '") center/cover no-repeat', em: "" };
+    }
+    if (s.indexOf("gradient") >= 0) {
+      var pp = s.split("|");
+      return { bg: pp[0], em: pp[1] || "" };
+    }
+    if (s.charAt(0) === "a") {
+      var a = null, i;
+      for (i = 0; i < V19_AVATARS.length; i++) if (V19_AVATARS[i].id === s) a = V19_AVATARS[i];
+      if (a) return { bg: a.g, em: a.e };
+    }
+    if (s.charAt(0) === "b") {
+      var b = null, j;
+      for (j = 0; j < V19_BANNERS.length; j++) if (V19_BANNERS[j].id === s) b = V19_BANNERS[j];
+      if (b) return { bg: b.g, em: "" };
+    }
+    return { bg: s, em: "" };
+  }
+
+  function v20Layer(host, id, skin, fs) {
+    if (!host || !skin) return;
+    var el = host.querySelector("#" + id);
+    if (!el) {
+      el = document.createElement("div");
+      el.id = id;
+      host.appendChild(el);
+    }
+    if (getComputedStyle(host).position === "static") host.style.position = "relative";
+    el.style.position = "absolute";
+    el.style.left = "0"; el.style.top = "0"; el.style.right = "0"; el.style.bottom = "0";
+    el.style.borderRadius = "inherit";
+    el.style.zIndex = "3";
+    el.style.pointerEvents = "none";
+    el.style.display = "flex";
+    el.style.alignItems = "center";
+    el.style.justifyContent = "center";
+    el.style.overflow = "hidden";
+    el.style.background = skin.bg;
+    el.style.fontSize = (fs || 34) + "px";
+    el.style.lineHeight = "1";
+    el.textContent = skin.em || "";
+  }
+
+  function v20PaintSkins() {
+    var u = current;
+    if (!u) return;
+    var av = document.getElementById("prAvatar");
+    if (av && u.avatar) v20Layer(av, "v20AvSkin", v20Skin(u.avatar), 38);
+    var cov = document.querySelector('.tabpane[data-pane="profile"] .pr-cover');
+    if (cov && u.banner) v20Layer(cov, "v20BnSkin", v20Skin(u.banner), 0);
+    var mini = document.querySelectorAll(".sn-ava, .top-ava, #dashAvatar");
+    for (var i = 0; i < mini.length; i++) {
+      if (u.avatar) v20Layer(mini[i], "v20MiniSkin" + i, v20Skin(u.avatar), 18);
+    }
+  }
+
+  function v20SaveSkin() {
+    var u = current;
+    if (!u) return;
+    saveUser(u);
+    v20PaintSkins();
+    try { if (typeof v19PaintProfile === "function") v19PaintProfile(u); } catch (e) {}
+    v20PaintSkins();
+    var srv = window.SlimServer;
+    if (srv && srv.online && typeof srv.setProfile === "function") {
+      try { srv.setProfile(u.avatar, u.banner, v20Name(u)).catch(function () {}); } catch (e) {}
+      if (typeof srv.syncNow === "function") setTimeout(function () { try { srv.syncNow(true); } catch (e) {} }, 700);
+    }
+  }
+
+  function v20PickAvatar() {
+    var u = current;
+    if (!u) return;
+    var h = '<div class="v19-sub">Выберите готовый дизайн или загрузите свою картинку</div><div class="v19-avgrid" style="margin-top:10px">';
+    var i;
+    for (i = 0; i < V19_AVATARS.length; i++) {
+      h += '<button type="button" class="v19-av" data-v20av="' + V19_AVATARS[i].id +
+           '" style="background:' + V19_AVATARS[i].g + '"><span>' + V19_AVATARS[i].e + '</span></button>';
+    }
+    h += '</div><label class="v19-upload" style="margin-top:14px"><input type="file" accept="image/*" id="v20AvFile" hidden><span>Загрузить свою картинку (до 900 КБ)</span></label>';
+    v19Modal("Аватарка", h, function (ov, close) {
+      var items = ov.querySelectorAll("[data-v20av]"), k;
+      for (k = 0; k < items.length; k++) {
+        items[k].addEventListener("click", function () {
+          u.avatar = this.getAttribute("data-v20av");
+          v20SaveSkin();
+          v20Say("Аватарка обновлена", "", "ok");
+          close();
+        });
+      }
+      var f = ov.querySelector("#v20AvFile");
+      if (f) f.addEventListener("change", function () {
+        var file = f.files && f.files[0];
+        if (!file) return;
+        if (file.size > 900000) { v20Say("Файл больше 900 КБ", "Выберите картинку меньше", "bad"); return; }
+        var fr = new FileReader();
+        fr.onload = function () {
+          u.avatar = String(fr.result);
+          v20SaveSkin();
+          v20Say("Аватарка загружена", "", "ok");
+          close();
+        };
+        fr.readAsDataURL(file);
+      });
+    });
+  }
+
+  function v20PickBanner() {
+    var u = current;
+    if (!u) return;
+    var h = '<div class="v19-bngrid">', i;
+    for (i = 0; i < V19_BANNERS.length; i++) {
+      h += '<button type="button" class="v19-bn" data-v20bn="' + V19_BANNERS[i].id +
+           '" style="background:' + V19_BANNERS[i].g + '"></button>';
+    }
+    h += '</div><label class="v19-upload" style="margin-top:14px"><input type="file" accept="image/*" id="v20BnFile" hidden><span>Загрузить свой баннер (до 900 КБ)</span></label>';
+    v19Modal("Баннер профиля", h, function (ov, close) {
+      var items = ov.querySelectorAll("[data-v20bn]"), k;
+      for (k = 0; k < items.length; k++) {
+        items[k].addEventListener("click", function () {
+          u.banner = this.getAttribute("data-v20bn");
+          v20SaveSkin();
+          v20Say("Баннер обновлён", "", "ok");
+          close();
+        });
+      }
+      var f = ov.querySelector("#v20BnFile");
+      if (f) f.addEventListener("change", function () {
+        var file = f.files && f.files[0];
+        if (!file) return;
+        if (file.size > 900000) { v20Say("Файл больше 900 КБ", "Выберите картинку меньше", "bad"); return; }
+        var fr = new FileReader();
+        fr.onload = function () {
+          u.banner = String(fr.result);
+          v20SaveSkin();
+          v20Say("Баннер загружен", "", "ok");
+          close();
+        };
+        fr.readAsDataURL(file);
+      });
+    });
+  }
+
+  /* ---------- переводы по номеру карты ---------- */
+  function v20ByCard(card) {
+    var d = v20Digits(card);
+    if (d.length < 16) return null;
+    var all = loadUsers(), k;
+    for (k in all) {
+      if (!all.hasOwnProperty(k)) continue;
+      var u = all[k];
+      var num = u && u.card ? v20Digits(u.card.number) : "";
+      if (num && num === d) return u;
+    }
+    return null;
+  }
+
+  function v20TransferOpen() {
+    var u = current;
+    if (!u) { v20Say("Нужен вход", "Сначала войдите в свой счёт", "bad"); return; }
+    if (u.frozen) { v20Say("Карта заморожена", "Сначала разморозьте карту", "bad"); return; }
+    var h = [
+      '<div class="v19-sub">Деньги уйдут на счёт другого игрока сразу. Доступно: ' + v20Cash(u.balance) + '</div>',
+      '<div class="v19-row" style="margin-top:12px">',
+      '<input class="v19-in" id="v20TrCard" inputmode="numeric" maxlength="19" placeholder="Номер карты: 0000 0000 0000 0000">',
+      '</div>',
+      '<div class="v19-who" id="v20TrWho">Введите 16 цифр карты получателя</div>',
+      '<div class="v19-row" style="margin-top:12px">',
+      '<input class="v19-in" id="v20TrSum" inputmode="numeric" placeholder="Сумма">',
+      '<input class="v19-in" id="v20TrNote" maxlength="60" placeholder="Комментарий (необязательно)">',
+      '</div>',
+      '<div class="v19-row" style="margin-top:10px">',
+      '<button class="v19-chip" data-v20q="1000" type="button">1 000</button>',
+      '<button class="v19-chip" data-v20q="10000" type="button">10 000</button>',
+      '<button class="v19-chip" data-v20q="100000" type="button">100 000</button>',
+      '<button class="v19-chip" data-v20q="1000000" type="button">1 млн</button>',
+      '<button class="v19-chip" data-v20q="all" type="button">Всё</button>',
+      '</div>',
+      '<div class="v19-row" style="margin-top:14px">',
+      '<button class="v19-b" id="v20TrGo" type="button">Перевести деньги</button>',
+      '</div>',
+      '<div class="v19-list" id="v20TrList" style="margin-top:14px"></div>'
+    ].join("");
+    v19Modal("Перевести деньги", h, function (ov, close) {
+      var card = ov.querySelector("#v20TrCard");
+      var sum = ov.querySelector("#v20TrSum");
+      var who = ov.querySelector("#v20TrWho");
+      card.addEventListener("input", function () {
+        var d = v20Digits(card.value).slice(0, 16), out = "", i;
+        for (i = 0; i < d.length; i++) { if (i && i % 4 === 0) out += " "; out += d[i]; }
+        card.value = out;
+        if (d.length < 16) {
+          who.textContent = "Введите 16 цифр карты получателя";
+          who.className = "v19-who";
+          return;
+        }
+        var r = v20ByCard(d);
+        if (r && r.id === current.id) {
+          who.textContent = "Это ваша же карта";
+          who.className = "v19-who bad";
+        } else if (r) {
+          who.textContent = "Получатель: " + v20Name(r) + (r.username ? " (@" + r.username + ")" : "");
+          who.className = "v19-who ok";
+        } else if (window.SlimServer && window.SlimServer.online) {
+          who.textContent = "Карта не найдена локально, проверим на сервере";
+          who.className = "v19-who";
+          if (typeof window.SlimServer.cardLookup === "function") {
+            window.SlimServer.cardLookup(d).then(function (res) {
+              if (res && (res.name || res.username)) {
+                who.textContent = "Получатель: " + (res.name || ("@" + res.username));
+                who.className = "v19-who ok";
+              }
+            }).catch(function () {});
+          }
+        } else {
+          who.textContent = "Такой карты нет";
+          who.className = "v19-who bad";
+        }
+      });
+      var qs = ov.querySelectorAll("[data-v20q]"), i;
+      for (i = 0; i < qs.length; i++) {
+        qs[i].addEventListener("click", function () {
+          var v = this.getAttribute("data-v20q");
+          sum.value = v === "all" ? String(Math.max(0, Math.floor(current.balance || 0))) : v;
+        });
+      }
+      ov.querySelector("#v20TrGo").addEventListener("click", function () {
+        v20DoTransfer(card.value, sum.value, (ov.querySelector("#v20TrNote") || {}).value, who, close);
+      });
+      v20FillHistory(ov.querySelector("#v20TrList"));
+    });
+  }
+
+  function v20FillHistory(box) {
+    if (!box) return;
+    var u = current, tx = (u && u.tx) || [], out = [], i;
+    for (i = 0; i < tx.length && out.length < 6; i++) {
+      var t = tx[i];
+      if (!t || String(t.title || "").indexOf("Перевод") < 0) continue;
+      out.push('<div class="v19-tr"><b>' + v20Esc(t.title) + '</b><span>' + v20Esc(t.sub || "") +
+               '</span><i>' + (t.kind === "in" ? "+" : "-") + v20Cash(t.amount) + '</i></div>');
+    }
+    box.innerHTML = out.length ? out.join("") : '<div class="v19-empty">Переводов пока нет</div>';
+  }
+
+  function v20DoTransfer(cardVal, sumVal, note, who, close) {
+    var u = current;
+    if (!u) return;
+    var d = v20Digits(cardVal);
+    var amount = Math.floor(Number(v20Digits(sumVal)) || 0);
+    if (d.length !== 16) { v20Say("Номер карты", "Нужно ровно 16 цифр", "bad"); return; }
+    if (v20Digits(u.card && u.card.number) === d) { v20Say("Себе нельзя", "Укажите карту другого игрока", "bad"); return; }
+    if (amount <= 0) { v20Say("Сумма", "Введите сумму перевода", "bad"); return; }
+    if (amount > Math.floor(u.balance || 0)) { v20Say("Недостаточно средств", "Доступно " + v20Cash(u.balance), "bad"); return; }
+
+    var srv = window.SlimServer;
+    var online = !!(srv && srv.online && srv.hasToken && srv.hasToken() && typeof srv.transfer === "function");
+    var txt = String(note || "").trim();
+
+    var all = loadUsers(), rid = null, k;
+    for (k in all) {
+      if (!all.hasOwnProperty(k)) continue;
+      var o = all[k];
+      if (o && o.card && v20Digits(o.card.number) === d) { rid = k; break; }
+    }
+
+    if (!rid && !online) { v20Say("Карта не найдена", "Проверьте номер", "bad"); return; }
+
+    if (rid) {
+      var r = all[rid];
+      r.balance = (Number(r.balance) || 0) + amount;
+      u.balance = (Number(u.balance) || 0) - amount;
+      try {
+        pushTx(u, { ts: Date.now(), title: "Перевод " + v20Name(r), sub: txt || ("На карту " + d.slice(-4)), amount: amount, kind: "out", status: "Успешно" });
+      } catch (e) {}
+      if (!r.tx) r.tx = [];
+      r.tx.unshift({ ts: Date.now(), title: "Перевод от " + v20Name(u), sub: txt || "Пополнение от игрока", amount: amount, kind: "in", status: "Зачислено" });
+      if (r.tx.length > 120) r.tx.length = 120;
+      all[u.id] = u;
+      all[rid] = r;
+      saveUsers(all);
+      try { render(u, true); } catch (e) {}
+      v20Say("Переведено " + v20Cash(amount), v20Name(r), "ok");
+    }
+
+    if (online) {
+      srv.transfer(d, amount, txt).then(function (res) {
+        if (res && res.error) { v20Say("Сервер: " + res.error, "", "bad"); return; }
+        if (!rid) v20Say("Переведено " + v20Cash(amount), "Сервер подтвердил", "ok");
+        if (typeof srv.syncNow === "function") srv.syncNow(true);
+      }).catch(function () {});
+    }
+
+    if (typeof close === "function") close();
+  }
+
+  /* ---------- промокоды: всегда работают локально ---------- */
+  function v20PromoSeed() {
+    try {
+      var k;
+      for (k in V20_PROMOS) {
+        if (!V20_PROMOS.hasOwnProperty(k)) continue;
+        if (!PROMOS[k]) PROMOS[k] = V20_PROMOS[k];
+      }
+    } catch (e) {}
+  }
+
+  function v20PromoApply() {
+    try { v20PromoSeed(); } catch (e) {}
+    var res = null;
+    try { res = pmApplyLocal(); } catch (e) { if (window.console) console.error("[SlimBANK] promo", e); }
+    var srv = window.SlimServer;
+    if (srv && srv.online && typeof srv.syncNow === "function") {
+      setTimeout(function () { try { srv.syncNow(true); } catch (e) {} }, 500);
+    }
+    return res;
+  }
+
+  /* ---------- уникальные юзернеймы ---------- */
+  function v20NameTaken(name, selfId) {
+    var n = String(name || "").toLowerCase().replace(/^@+/, "");
+    if (!n) return true;
+    try { if (RESERVED.indexOf(n) >= 0) return true; } catch (e) {}
+    var all = loadUsers(), id, i;
+    for (id in all) {
+      if (!all.hasOwnProperty(id)) continue;
+      var o = all[id];
+      if (!o) continue;
+      var own = String(o.username || "").toLowerCase();
+      if (own && own === n && id !== selfId) return true;
+      var extra = o.ownNames || [];
+      for (i = 0; i < extra.length; i++) {
+        var e2 = String(extra[i] || "").toLowerCase().replace(/^@+/, "");
+        if (e2 && e2 === n && id !== selfId) return true;
+      }
+    }
+    return false;
+  }
+
+  function v20HookUsernames() {
+    try {
+      usernameFree = function (name, selfId) { return !v20NameTaken(name, selfId); };
+    } catch (e) {}
+  }
+
+  function v20RegUsername() {
+    var ui = document.getElementById("regUser");
+    var h = document.getElementById("regUserHint");
+    if (!ui || !h) return;
+    var raw = String(ui.value || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (ui.value !== raw) ui.value = raw;
+    if (raw.length < 3) {
+      h.textContent = "3-20 символов: латиница, цифры, подчёркивание";
+      h.className = "hint";
+      v19Reg.userOk = false;
+      v19Reg.username = "";
+      return;
+    }
+    if (v20NameTaken(raw, null)) {
+      h.textContent = "@" + raw + " уже занят — выберите другой";
+      h.className = "hint v19-bad";
+      v19Reg.userOk = false;
+      v19Reg.username = "";
+      return;
+    }
+    h.textContent = "@" + raw + " свободен";
+    h.className = "hint v19-good";
+    v19Reg.userOk = true;
+    v19Reg.username = raw;
+    var srv = window.SlimServer;
+    if (srv && srv.online && typeof srv.usernameFree === "function") {
+      srv.usernameFree(raw).then(function (free) {
+        if (free === false) {
+          h.textContent = "@" + raw + " занят на сервере";
+          h.className = "hint v19-bad";
+          v19Reg.userOk = false;
+        }
+      }).catch(function () {});
+    }
+  }
+
+  function v20RegEnsure() {
+    if (!document.getElementById("regForm")) return;
+    if (!document.getElementById("regUser")) {
+      try { v19BuildIdentity(); } catch (e) {}
+    }
+    var ui = document.getElementById("regUser");
+    if (ui && !ui.dataset.v20) {
+      ui.dataset.v20 = "1";
+      ui.addEventListener("input", v20RegUsername);
+      ui.addEventListener("blur", v20RegUsername);
+    }
+  }
+
+  /* ---------- клики и запуск ---------- */
+  function v20Clicks() {
+    if (window.__v20clicks) return;
+    window.__v20clicks = true;
+    document.addEventListener("click", function (e) {
+      var sp = e.target.closest ? e.target.closest("#actSpend") : null;
+      if (sp) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        v20TransferOpen();
+        return;
+      }
+      var pm = e.target.closest ? e.target.closest("#pmGo") : null;
+      if (pm) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        v20PromoApply();
+        return;
+      }
+      var av = e.target.closest ? e.target.closest("#v19AvBtn") : null;
+      if (av) { e.preventDefault(); e.stopImmediatePropagation(); v20PickAvatar(); return; }
+      var bn = e.target.closest ? e.target.closest("#v19BnBtn") : null;
+      if (bn) { e.preventDefault(); e.stopImmediatePropagation(); v20PickBanner(); return; }
+    }, true);
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      var t = e.target;
+      if (t && t.id === "pmInput") { e.preventDefault(); v20PromoApply(); }
+    }, true);
+  }
+
+  function v20Init() {
+    try { v20PromoSeed(); } catch (e) {}
+    try { v20HookUsernames(); } catch (e) {}
+    try { v20Clicks(); } catch (e) {}
+    try { v20RegEnsure(); } catch (e) {}
+    try { v20KillOldPanel(); } catch (e) {}
+    try {
+      var dice = document.querySelector(".casino-card.dice");
+      if (dice && dice.parentNode) dice.parentNode.removeChild(dice);
+    } catch (e) {}
+    try {
+      var sp = document.getElementById("actSpend");
+      if (sp) sp.innerHTML = '<span class="d">\u2192</span>Перевести деньги';
+    } catch (e) {}
+    try { v20PaintSkins(); } catch (e) {}
+  }
+
+  function v20KillOldPanel() {
+    try {
+      var old = document.getElementById("v19TrPanel");
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+    } catch (e) {}
+    try { v19BuildTransfer = function () {}; } catch (e) {}
+    try { v19Lookup = function () {}; } catch (e) {}
+    try { v19DoTransfer = function () {}; } catch (e) {}
+  }
+
+  window.__v20 = { init: v20Init, transfer: v20TransferOpen, promo: v20PromoApply, paint: v20PaintSkins, taken: v20NameTaken };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v20Init);
+  setTimeout(v20Init, 80);
+  setTimeout(v20Init, 1500);
+  setInterval(function () { try { v20PaintSkins(); v20RegEnsure(); v20KillOldPanel(); } catch (e) {} }, 900);
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
