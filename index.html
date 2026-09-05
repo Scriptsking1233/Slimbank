@@ -3073,6 +3073,84 @@ h1 { font-weight:800 !important; letter-spacing:-.03em !important; }
 .v25-hint.bad { color: #FF8C82; }
 .v25-hint.good { color: #34D27B; }
 </style>
+<style id="v26css">
+:root, html, body, body.dark, body.light, body.dark.v22, body.light.v22{
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','SF Pro Display','Inter','Segoe UI Variable Text',system-ui,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif !important;
+  --display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter Tight','Inter','Segoe UI Variable Display',system-ui,'Segoe UI',Roboto,sans-serif !important;
+}
+html,body{ font-family:var(--sans) !important; font-weight:400; letter-spacing:-.012em; line-height:1.55;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
+h1,h2,h3,h4,.balance,.cc-num,.pr-id h3,.v19-h,.panel-head h3,.v26-price{ font-family:var(--display) !important; letter-spacing:-.028em; }
+h1{ font-weight:800; }
+h2,h3,.v19-h,.panel-head h3{ font-weight:700; }
+.btn,.sn-item,button,input,select,textarea,.v19-b,.v19-in,.v26-f{ font-family:var(--sans) !important; }
+.btn,.v19-b,.sn-item span{ font-weight:600; letter-spacing:-.006em; }
+.muted,.hint,.v19-sub,.v19-who,.pr-user,.note{ font-weight:450; }
+
+/* ---------- плавные появления ---------- */
+@keyframes v26rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes v26shine{0%{transform:translateX(-120%)}55%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+@keyframes v26glow{0%,100%{box-shadow:0 0 0 5px var(--canvas),0 14px 34px -18px rgba(40,110,240,.75)}
+  50%{box-shadow:0 0 0 5px var(--canvas),0 20px 46px -16px rgba(120,80,240,.85)}}
+@keyframes v26pulse{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.35)}}
+@keyframes v26pop{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
+.tabpane:not(.hidden) > *{ animation:v26rise .5s cubic-bezier(.22,.85,.24,1) both; }
+.tabpane:not(.hidden) > *:nth-child(2){ animation-delay:.05s }
+.tabpane:not(.hidden) > *:nth-child(3){ animation-delay:.1s }
+.tabpane:not(.hidden) > *:nth-child(4){ animation-delay:.15s }
+
+/* ---------- профиль ---------- */
+.pr-cover{ position:relative; overflow:hidden; }
+.pr-cover::after{ content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);
+  animation:v26shine 6.5s ease-in-out infinite; }
+.pr-avatar{ animation:v26glow 5.5s ease-in-out infinite !important; }
+.pr-stat{ animation:v26pop .5s cubic-bezier(.22,.85,.24,1) both; }
+.pr-stat:nth-child(2){animation-delay:.04s}.pr-stat:nth-child(3){animation-delay:.08s}
+.pr-stat:nth-child(4){animation-delay:.12s}.pr-stat:nth-child(5){animation-delay:.16s}
+.pr-stat:nth-child(6){animation-delay:.2s}
+.v26-lockrow{ display:flex; align-items:center; gap:8px; }
+#pPhone.v25-locked, #pEmail.v25-locked{ opacity:.75; }
+#pPhone.v25-locked::after, #pEmail.v25-locked::after{ content:'\1F512'; font-size:12px; opacity:.6; }
+
+/* ---------- аукцион ---------- */
+#v19LotGrid{ display:grid !important; gap:14px !important;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr)) !important; }
+.v19-lot{ position:relative; overflow:hidden; border-radius:22px !important; padding:18px !important;
+  background:linear-gradient(165deg,rgba(127,140,180,.14),rgba(127,140,180,.05)) !important;
+  box-shadow:inset 0 0 0 1px rgba(140,150,180,.16);
+  animation:v26pop .45s cubic-bezier(.22,.85,.24,1) both;
+  transition:transform .38s cubic-bezier(.2,.8,.2,1), box-shadow .38s ease !important; }
+.v19-lot:hover{ transform:translateY(-6px) !important;
+  box-shadow:inset 0 0 0 1px rgba(90,140,255,.4), 0 26px 48px -26px rgba(10,20,50,.75) !important; }
+.v19-lot::before{ content:''; position:absolute; inset:-1px -1px auto; height:3px;
+  background:linear-gradient(90deg,#3D8BFD,#A78BFA,#34D27B); opacity:.85; }
+.v19-lot .t{ font-size:19px !important; font-family:var(--display); }
+.v26-kind{ position:absolute; top:14px; right:14px; font-size:10.5px; font-weight:700;
+  letter-spacing:.08em; text-transform:uppercase; padding:4px 9px; border-radius:999px;
+  background:rgba(61,139,253,.16); color:#7FB4FF; }
+.v26-kind.num{ background:rgba(52,210,123,.16); color:#65DDA0; }
+.v26-kind.mine{ background:rgba(242,166,75,.18); color:#FFC178; }
+.v19-lot .v21-price, .v26-price{ font-family:var(--display); font-weight:700; font-size:17px;
+  font-variant-numeric:tabular-nums; margin:2px 0 12px; }
+.v26-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0 14px; }
+.v26-f{ border:0; cursor:pointer; padding:7px 13px; border-radius:999px; font-size:12.5px; font-weight:600;
+  background:rgba(127,140,180,.14); color:inherit; transition:background .25s ease, transform .25s ease; }
+.v26-f:hover{ transform:translateY(-1px); background:rgba(127,140,180,.24); }
+.v26-f.on{ background:linear-gradient(135deg,#3D8BFD,#7C5CF0); color:#fff; }
+.v26-count{ font-size:12.5px; opacity:.6; margin-left:auto; }
+.v21-live i{ animation:v26pulse 1.8s ease-in-out infinite; }
+
+/* ---------- живое обновление ---------- */
+@keyframes v26bal{0%{transform:scale(1)}35%{transform:scale(1.06)}100%{transform:scale(1)}}
+.v26-bump{ animation:v26bal .6s cubic-bezier(.22,.85,.24,1); }
+.v26-rt{ position:fixed; left:14px; bottom:52px; z-index:60; display:flex; align-items:center; gap:7px;
+  font-size:12px; font-weight:600; padding:7px 12px; border-radius:999px;
+  background:rgba(10,14,22,.82); color:#D8DEE9; box-shadow:0 10px 26px -14px #000;
+  backdrop-filter:blur(8px); opacity:.9; }
+.v26-rt i{ width:7px; height:7px; border-radius:50%; background:#34D27B; animation:v26pulse 1.8s ease-in-out infinite; }
+.v26-rt.off i{ background:#F2685C; animation:none; }
+</style>
 </head>
 <body>
 <header id="siteHeader">
@@ -11806,7 +11884,7 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   setTimeout(v21Init, 120);
   setTimeout(v21Init, 1600);
   setInterval(function () { try { v21Refresh(); } catch (e) {} }, 1200);
-  setInterval(function () { try { v21FetchLots(); } catch (e) {} }, 15000);
+  setInterval(function () { try { v21FetchLots(); } catch (e) {} }, 6000);
 
 
   /* ================= v22: чёрная тема, галочка в имени ================= */
@@ -12551,6 +12629,404 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   setTimeout(v25Init, 220);
   setTimeout(v25Init, 1400);
   setInterval(function () { try { v25Contacts(); } catch (e) {} }, 2600);
+
+  /* ============ v26: realtime, переводы, контакты, аукцион ============ */
+  var v26Busy = false, v26At = 0, v26Beat = 0, v26Bal = null, v26Filter = 'all', v26Sort = 'new';
+
+  function v26Say(t, s2, k) {
+    try { if (typeof toast === 'function') { toast(t, s2 || '', k || 'ok'); return; } } catch (e) {}
+    try { if (typeof v19Toast === 'function') v19Toast(t + ' ' + (s2 || '')); } catch (e2) {}
+  }
+
+  function v26Err(e) {
+    var m = String(e || '');
+    if (m === 'no_session') return 'нужен вход на сервер';
+    if (m === 'not_found' || m === 'no_card') return 'такой карты нет в банке';
+    if (m === 'low' || m === 'low_balance') return 'недостаточно средств';
+    if (m === 'self') return 'это ваша же карта';
+    if (m === 'banned') return 'аккаунт заблокирован';
+    if (m === 'bad_amount') return 'неверная сумма';
+    return m.slice(0, 48) || 'ошибка';
+  }
+
+  function v26Srv() {
+    var srv = window.SlimServer;
+    if (!srv || !srv.online) return null;
+    if (typeof srv.hasToken === 'function' && !srv.hasToken()) return null;
+    return srv;
+  }
+
+  /* ---------- живое обновление баланса и переводов ---------- */
+  function v26Bump() {
+    var els = document.querySelectorAll('.balance, #prBalance');
+    for (var i = 0; i < els.length; i++) {
+      var e = els[i];
+      e.classList.remove('v26-bump');
+      void e.offsetWidth;
+      e.classList.add('v26-bump');
+    }
+  }
+
+  function v26Apply() {
+    if (!current) return;
+    var all = {};
+    try { all = loadUsers() || {}; } catch (e) { return; }
+    var fresh = all[current.id];
+    if (!fresh) return;
+    var was = Number(v26Bal === null ? current.balance : v26Bal) || 0;
+    var now = Number(fresh.balance) || 0;
+    if (Array.isArray(fresh.tx) && fresh.tx.length >= ((current.tx || []).length)) current.tx = fresh.tx;
+    if (fresh.username && fresh.username !== current.username) current.username = fresh.username;
+    if (typeof fresh.verified !== 'undefined') current.verified = fresh.verified;
+    if (Math.abs(now - was) >= 1) {
+      current.balance = now;
+      v26Bal = now;
+      try { render(current, false); } catch (e2) {}
+      try { if (typeof v19PaintProfile === 'function') v19PaintProfile(current); } catch (e3) {}
+      v26Bump();
+      if (now > was) v26Say('Поступление', '+' + v20Cash(now - was), 'ok');
+    } else {
+      v26Bal = now;
+    }
+  }
+
+  function v26Pull() {
+    var srv = v26Srv();
+    if (!srv || typeof srv.pull !== 'function' || v26Busy) return;
+    if (Date.now() - v26At < 2200) return;
+    v26Busy = true;
+    v26At = Date.now();
+    srv.pull().then(function () {
+      v26Busy = false;
+      try { v26Apply(); } catch (e) {}
+    }).catch(function () { v26Busy = false; });
+  }
+
+  function v26Tick() {
+    v26Beat++;
+    var srv = v26Srv();
+    v26Pill(!!srv);
+    if (!srv) return;
+    if (v26Beat % 2 === 0) {
+      try { if (typeof srv.syncNow === 'function') srv.syncNow(true); } catch (e) {}
+      setTimeout(v26Pull, 700);
+    } else {
+      v26Pull();
+    }
+    try { if (typeof v21FetchLots === 'function') v21FetchLots(); } catch (e2) {}
+  }
+
+  function v26Pill(on) {
+    var app = document.getElementById('app');
+    if (!app || app.classList.contains('hidden')) {
+      var old = document.getElementById('v26Rt');
+      if (old) old.remove();
+      return;
+    }
+    var p = document.getElementById('v26Rt');
+    if (!p) {
+      p = document.createElement('div');
+      p.id = 'v26Rt';
+      document.body.appendChild(p);
+    }
+    p.className = 'v26-rt' + (on ? '' : ' off');
+    p.innerHTML = '<i></i>' + (on ? 'Онлайн · баланс и лоты живые' : 'Оффлайн · только этот браузер');
+  }
+
+  /* ---------- переводы: через сервер, без двойного списания ---------- */
+  function v26Transfer(cardVal, sumVal, note, who, close) {
+    var u = current;
+    if (!u) return;
+    var d = v20Digits(cardVal);
+    var amount = Math.floor(Number(v20Digits(sumVal)) || 0);
+    var txt = String(note || '').trim();
+    if (d.length !== 16) { v26Say('Номер карты', 'Нужно ровно 16 цифр', 'bad'); return; }
+    if (v20Digits(u.card && u.card.number) === d) { v26Say('Себе нельзя', 'Укажите карту другого игрока', 'bad'); return; }
+    if (amount <= 0) { v26Say('Сумма', 'Введите сумму перевода', 'bad'); return; }
+    if (amount > Math.floor(u.balance || 0)) { v26Say('Недостаточно средств', 'Доступно ' + v20Cash(u.balance), 'bad'); return; }
+
+    var srv = v26Srv();
+    var btn = document.getElementById('v20TrGo');
+    if (srv && typeof srv.transfer === 'function') {
+      if (btn) { btn.disabled = true; btn.textContent = 'Отправляем...'; }
+      srv.transfer(d, amount, txt).then(function (res) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Перевести деньги'; }
+        if (!res || res.ok === false || res.error) {
+          v26Say('Перевод не прошёл', v26Err(res && res.error), 'bad');
+          return;
+        }
+        var name = res.to || res.name || res.receiver || ('карта •••• ' + d.slice(-4));
+        u.balance = Math.max(0, (Number(u.balance) || 0) - amount);
+        v26Bal = u.balance;
+        try {
+          pushTx(u, { ts: Date.now(), title: 'Перевод ' + name, sub: txt || ('На карту ' + d.slice(-4)), amount: amount, kind: 'out', status: 'Успешно' });
+        } catch (e) {}
+        try { saveUser(u); render(u, false); } catch (e2) {}
+        v26Bump();
+        try { if (typeof srv.syncNow === 'function') srv.syncNow(true); } catch (e3) {}
+        v26Say('Переведено ' + v20Cash(amount), String(name), 'ok');
+        if (typeof close === 'function') close();
+      }).catch(function (err) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Перевести деньги'; }
+        v26Say('Сервер не ответил', v26Err(err && err.message), 'bad');
+      });
+      return;
+    }
+
+    /* оффлайн: только игроки этого браузера */
+    var all = loadUsers(), rid = null, k;
+    for (k in all) {
+      if (!all.hasOwnProperty(k)) continue;
+      var o = all[k];
+      if (o && o.card && v20Digits(o.card.number) === d) { rid = k; break; }
+    }
+    if (!rid) { v26Say('Карта не найдена', 'Сервер оффлайн, доступны только ваши счета', 'bad'); return; }
+    var r = all[rid];
+    r.balance = (Number(r.balance) || 0) + amount;
+    u.balance = (Number(u.balance) || 0) - amount;
+    v26Bal = u.balance;
+    try { pushTx(u, { ts: Date.now(), title: 'Перевод ' + v20Name(r), sub: txt || ('На карту ' + d.slice(-4)), amount: amount, kind: 'out', status: 'Успешно' }); } catch (e4) {}
+    if (!r.tx) r.tx = [];
+    r.tx.unshift({ ts: Date.now(), title: 'Перевод от ' + v20Name(u), sub: txt || 'Пополнение от игрока', amount: amount, kind: 'in', status: 'Зачислено' });
+    if (r.tx.length > 120) r.tx.length = 120;
+    all[u.id] = u;
+    all[rid] = r;
+    saveUsers(all);
+    try { render(u, false); } catch (e5) {}
+    v26Bump();
+    v26Say('Переведено ' + v20Cash(amount), v20Name(r), 'ok');
+    if (typeof close === 'function') close();
+  }
+
+  /* ---------- телефон и почта — только после покупки номера ---------- */
+  function v26Nums(u) {
+    var out = [], seen = {}, src = (u && u.ownNums) || [], i, v;
+    try {
+      if (u && u.id) {
+        var all = loadUsers() || {};
+        var fresh = all[u.id];
+        if (fresh && Array.isArray(fresh.ownNums)) src = src.concat(fresh.ownNums);
+      }
+    } catch (e) {}
+    for (i = 0; i < src.length; i++) {
+      v = src[i] ? String(src[i]) : '';
+      if (!v || seen[v]) continue;
+      seen[v] = 1;
+      out.push(v);
+    }
+    return out;
+  }
+
+  function v26GoAuction() {
+    try {
+      var real = document.querySelector('#dashTabs button[data-tab="auction"]');
+      if (real) { real.click(); return; }
+      if (typeof setDashTab === 'function') setDashTab('auction');
+    } catch (e) {}
+  }
+
+  function v26NeedNumber() {
+    v19Modal('Смена контактов закрыта',
+      '<div class="v19-sub">Изменить телефон и почту можно только после покупки номера на аукционе. ' +
+      'Номера +888 продают другие игроки — купите любой, и он станет вашим номером в банке.</div>' +
+      '<div class="v19-row" style="margin-top:16px"><button class="v19-b" id="v26ToAuc" type="button">Открыть аукцион</button></div>',
+      function (ov, close) {
+        var b = ov.querySelector('#v26ToAuc');
+        if (b) b.addEventListener('click', function () { close(); v26GoAuction(); });
+      });
+  }
+
+  function v26EditContact(kind) {
+    var u = current;
+    if (!u) return;
+    var nums = v26Nums(u);
+    if (!nums.length) { v26NeedNumber(); return; }
+    var isPhone = kind === 'phone';
+    if (isPhone) {
+      var opts = '', i;
+      for (i = 0; i < nums.length; i++) {
+        opts += '<button class="v26-f' + (String(u.phone) === nums[i] ? ' on' : '') +
+          '" data-v26num="' + v20Esc(nums[i]) + '" type="button">' + v20Esc(nums[i]) + '</button>';
+      }
+      v19Modal('Сменить номер',
+        '<div class="v19-sub">Доступны только купленные на аукционе номера.</div>' +
+        '<div class="v26-bar" style="margin-top:14px">' + opts + '</div>',
+        function (ov, close) {
+          var bs = ov.querySelectorAll('[data-v26num]'), j;
+          for (j = 0; j < bs.length; j++) {
+            bs[j].addEventListener('click', function () {
+              u.phone = this.getAttribute('data-v26num');
+              try { saveUser(u); render(u, false); } catch (e) {}
+              try { if (typeof v19PaintProfile === 'function') v19PaintProfile(u); } catch (e2) {}
+              var srv = v26Srv();
+              try { if (srv && typeof srv.syncNow === 'function') srv.syncNow(true); } catch (e3) {}
+              v26Say('Номер изменён', u.phone, 'ok');
+              close();
+            });
+          }
+        });
+      return;
+    }
+    try { if (typeof window.__v25 === 'object' && typeof window.__v25.edit === 'function') { v25EditContact('email'); return; } } catch (e4) {}
+  }
+
+  function v26Locks() {
+    var u = current;
+    var nums = v26Nums(u);
+    var ph = document.getElementById('pPhone');
+    var em = document.getElementById('pEmail');
+    var locked = !nums.length;
+    if (ph) {
+      ph.classList.toggle('v25-locked', locked);
+      ph.title = locked ? 'Сначала купите номер на аукционе' : 'Сменить номер на купленный';
+    }
+    if (em) {
+      em.classList.toggle('v25-locked', locked);
+      em.title = locked ? 'Сначала купите номер на аукционе' : 'Изменить почту';
+    }
+  }
+
+  /* ---------- аукцион: фильтры, сортировка, красивые лоты ---------- */
+  function v26Bar(grid, total) {
+    var host = grid.parentNode;
+    if (!host) return;
+    var bar = host.querySelector('#v26Bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'v26Bar';
+      bar.className = 'v26-bar';
+      host.insertBefore(bar, grid);
+      bar.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('[data-v26f],[data-v26s]') : null;
+        if (!b) return;
+        if (b.getAttribute('data-v26f')) v26Filter = b.getAttribute('data-v26f');
+        if (b.getAttribute('data-v26s')) v26Sort = b.getAttribute('data-v26s');
+        v26Lots();
+      });
+    }
+    function f(id, label, cur, attr) {
+      return '<button class="v26-f' + (cur === id ? ' on' : '') + '" ' + attr + '="' + id + '" type="button">' + label + '</button>';
+    }
+    bar.innerHTML =
+      f('all', 'Все', v26Filter, 'data-v26f') +
+      f('name', 'Юзернеймы', v26Filter, 'data-v26f') +
+      f('num', 'Номера +888', v26Filter, 'data-v26f') +
+      f('new', 'Сначала новые', v26Sort, 'data-v26s') +
+      f('cheap', 'Сначала дешёвые', v26Sort, 'data-v26s') +
+      f('rich', 'Сначала дорогие', v26Sort, 'data-v26s') +
+      '<span class="v26-count">Лотов: ' + total + '</span>';
+  }
+
+  function v26Lots() {
+    var grid = document.getElementById('v19LotGrid');
+    if (!grid || typeof v21AllLots !== 'function') return;
+    var lots = [];
+    try { lots = v21AllLots() || []; } catch (e) { return; }
+    var all = lots.slice(), i;
+    if (v26Filter !== 'all') {
+      all = all.filter(function (L) { return L.kind === v26Filter; });
+    }
+    if (v26Sort === 'cheap') all.sort(function (a, b) { return (a.price || 0) - (b.price || 0); });
+    else if (v26Sort === 'rich') all.sort(function (a, b) { return (b.price || 0) - (a.price || 0); });
+    else all.sort(function (a, b) { return (b.mine ? 1 : 0) - (a.mine ? 1 : 0); });
+
+    var h = '', mh = '';
+    for (i = 0; i < all.length; i++) {
+      var L = all[i];
+      var title = L.kind === 'name' ? '@' + L.item : L.item;
+      var kind = L.mine ? 'Мой лот' : (L.kind === 'name' ? 'Юзернейм' : 'Номер');
+      var cls = L.mine ? 'mine' : (L.kind === 'name' ? 'name' : 'num');
+      h += '<div class="v19-lot' + (L.remote ? ' remote' : '') + '" style="animation-delay:' + Math.min(i * 35, 350) + 'ms">' +
+        '<span class="v26-kind ' + cls + '">' + kind + '</span>' +
+        '<div class="t">' + v20Esc(title) + '</div>' +
+        '<div class="who">' + v20Esc(L.sellerName) + (L.verified && typeof v21TickSvg === 'function' ? v21TickSvg(14) : '') + '</div>' +
+        '<div class="v26-price">' + v20Cash(L.price) + '</div>' +
+        (L.mine
+          ? '<button class="v19-b x" data-v21del="' + L.id + '" type="button">Снять с продажи</button>'
+          : '<button class="v19-b" data-v21buy="' + L.id + '" type="button">Купить</button>') +
+        '</div>';
+      if (L.mine) mh += '<div class="v19-li"><span>' + v20Esc(title) + '</span><b>' + v20Cash(L.price) + '</b></div>';
+    }
+    grid.innerHTML = all.length ? h : '<div class="v19-empty">Здесь пока пусто — выставьте лот или смените фильтр</div>';
+    var mine = document.getElementById('v19MyLots');
+    if (mine) mine.innerHTML = mh;
+    var bs = grid.querySelectorAll('[data-v21buy]'), j;
+    for (j = 0; j < bs.length; j++) {
+      bs[j].addEventListener('click', function () {
+        if (typeof v21BuyLot === 'function') v21BuyLot(this.getAttribute('data-v21buy'));
+      });
+    }
+    var ds = grid.querySelectorAll('[data-v21del]'), k;
+    for (k = 0; k < ds.length; k++) {
+      ds[k].addEventListener('click', function () {
+        if (typeof v21CancelLot === 'function') v21CancelLot(this.getAttribute('data-v21del'));
+      });
+    }
+    v26Bar(grid, lots.length);
+    var head = grid.parentNode ? grid.parentNode.querySelector('.v19-h') : null;
+    if (head) {
+      var lv = head.querySelector('.v21-live');
+      if (!lv) {
+        lv = document.createElement('span');
+        lv.className = 'v21-live';
+        head.appendChild(lv);
+      }
+      var on = !!v26Srv();
+      lv.className = 'v21-live' + (on ? '' : ' off');
+      lv.innerHTML = '<i></i>' + (on ? 'Живой аукцион · виден всем' : 'Сервер оффлайн · только ваши лоты');
+    }
+  }
+
+  function v26Init() {
+    try { v20DoTransfer = v26Transfer; } catch (e) {}
+    try { v25EditContactWrap(); } catch (e1) {}
+    try { v21RenderLots = v26Lots; } catch (e2) {}
+    try { v26Locks(); } catch (e3) {}
+    try { v26Lots(); } catch (e4) {}
+  }
+
+  function v25EditContactWrap() {
+    var ph = document.getElementById('pPhone');
+    var em = document.getElementById('pEmail');
+    if (ph && !ph.dataset.v26) {
+      ph.dataset.v26 = '1';
+      ph.addEventListener('click', function (ev) {
+        ev.stopImmediatePropagation();
+        v26EditContact('phone');
+      }, true);
+    }
+    if (em && !em.dataset.v26) {
+      em.dataset.v26 = '1';
+      em.addEventListener('click', function (ev) {
+        if (!v26Nums(current).length) {
+          ev.stopImmediatePropagation();
+          v26NeedNumber();
+        }
+      }, true);
+    }
+  }
+
+  window.__v26 = {
+    init: v26Init,
+    tick: v26Tick,
+    pull: v26Pull,
+    apply: v26Apply,
+    transfer: v26Transfer,
+    lots: v26Lots,
+    nums: v26Nums,
+    edit: v26EditContact,
+    locks: v26Locks
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', v26Init);
+  else v26Init();
+  setTimeout(v26Init, 400);
+  setTimeout(v26Init, 1600);
+  setInterval(function () { try { v26Init(); } catch (e) {} }, 3000);
+  setInterval(function () { try { v26Tick(); } catch (e) {} }, 4000);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') { try { v26Tick(); } catch (e) {} }
+  });
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
