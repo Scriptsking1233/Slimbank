@@ -3016,6 +3016,63 @@ h1 { font-weight:800 !important; letter-spacing:-.03em !important; }
 .v24-bad { color:#FF8C82 !important; }
 .v24-good { color:#34D27B !important; }
 </style>
+<style id="v25css">
+/* --- эмодзи: без мерцания --- */
+.v23-em, .v24-em, .v25-em {
+  animation: none !important;
+  transition: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  will-change: auto !important;
+  -webkit-user-select: none; user-select: none;
+  image-rendering: -webkit-optimize-contrast;
+  background: none !important;
+  box-shadow: none !important;
+  backface-visibility: hidden;
+}
+.v25-em[data-v25pend="1"] { visibility: hidden; }
+
+/* --- профиль в стиле Telegram --- */
+.pr-cover { height: 176px !important;
+  background: radial-gradient(120% 130% at 22% -10%, #3C8DF0 0%, #2159B8 45%, #6B4BE0 100%) !important;
+  animation: none !important; }
+.pr-head { flex-direction: column !important; align-items: center !important;
+  text-align: center !important; gap: 12px !important; margin-top: -68px !important;
+  padding: 0 6px 2px !important; }
+.pr-avatar { width: 128px !important; height: 128px !important; font-size: 42px !important;
+  border-width: 5px !important; transition: transform .5s cubic-bezier(.2,.8,.2,1) !important; }
+.pr-avatar:hover { transform: translateY(-3px) scale(1.03) rotate(0deg) !important; }
+.pr-avatar .v23-em { width: 60% !important; height: 60% !important; }
+.pr-id { text-align: center !important; width: 100%; padding-bottom: 0 !important; }
+.pr-id h3 { justify-content: center !important; display: flex !important; align-items: center;
+  gap: 8px; flex-wrap: wrap; font-size: 27px !important; letter-spacing: -.026em !important; }
+.pr-user, .v21-uname, .v21-also { justify-content: center !important; text-align: center !important; }
+.pr-user { display: flex !important; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 15px !important; }
+.pr-pills { justify-content: center !important; margin-top: 12px !important; }
+.pr-pills .pill { border-radius: 999px !important; }
+#goGifts { margin-top: 4px; }
+.pr-stats { gap: 12px !important; margin-top: 22px !important; }
+.pr-stat { border-radius: 18px !important; }
+.pr-title { text-align: left; }
+.v21-pen, .v21-penav { transition: transform .25s ease, background .25s ease !important; }
+.v21-pen:hover, .v21-penav:hover { transform: scale(1.08) !important; }
+
+/* --- редактируемые контакты в Счёт и карта --- */
+#pPhone.v25-ed, #pEmail.v25-ed {
+  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  border-radius: 8px; padding: 2px 6px; margin: -2px -6px;
+  transition: background .25s ease, color .25s ease;
+}
+#pPhone.v25-ed:hover, #pEmail.v25-ed:hover { background: var(--soft); color: var(--blue-ink); }
+#pPhone.v25-ed::after, #pEmail.v25-ed::after {
+  content: '\270E'; font-size: 13px; opacity: .55;
+}
+.v25-hint { font-size: 12.5px; color: var(--text2); margin-top: 8px; }
+.v25-hint.bad { color: #FF8C82; }
+.v25-hint.good { color: #34D27B; }
+</style>
 </head>
 <body>
 <header id="siteHeader">
@@ -11194,9 +11251,9 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
       ".v21-penav:hover{transform:scale(1.12) rotate(-10deg)}",
       ".v21-penav svg{width:15px;height:15px}",
       /* профиль */
-      ".pr-head{justify-content:flex-start!important;text-align:left!important;align-items:flex-end!important}",
-      ".pr-head #prAvatar{margin-left:6px!important;margin-right:18px!important;position:relative}",
-      ".pr-id{text-align:left!important;align-items:flex-start!important}",
+      ".pr-head{justify-content:center!important;text-align:center!important;align-items:center!important;flex-direction:column!important}",
+      ".pr-head #prAvatar{margin:0 auto!important;position:relative}",
+      ".pr-id{text-align:center!important;align-items:center!important;width:100%}",
       ".un-box,.un-hint,.pr-rows,#prNames,#prNums,.v21-off{display:none!important}",
       ".v21-also{margin-top:7px;font-size:13.5px;opacity:.8;line-height:1.6}",
       ".v21-also i{font-style:normal;opacity:.55;margin-right:5px}",
@@ -11957,7 +12014,7 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v23Init);
   setTimeout(v23Init, 140);
   setTimeout(v23Init, 1200);
-  setInterval(function () { try { v23Emojify(); } catch (e) {} }, 1400);
+  /* v25: скан эмодзи теперь по MutationObserver */
 
 
   /* ================= v24: фиксы регистрации, имён, сервера, эмодзи ================= */
@@ -12298,7 +12355,202 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v24Init);
   setTimeout(v24Init, 160);
   setTimeout(v24Init, 1300);
-  setInterval(function () { try { v24Emojify(); v24ServerWatch(); } catch (e) {} }, 1500);
+  setInterval(function () { try { v24ServerWatch(); } catch (e) {} }, 1500);
+
+  /* ================= v25: без мерцания эмодзи + контакты + профиль ================= */
+  var V25_OK = {}, V25_BAD = {}, v25Dirty = true, v25Busy = false, v25Timer = null;
+
+  function v25Cache(code, url) {
+    if (!V25_OK[code]) {
+      V25_OK[code] = url;
+      try { var pre = new Image(); pre.src = url; } catch (e) {}
+    }
+  }
+
+  function v25MakeEmoji(ch) {
+    var code = v23Code(ch);
+    if (!code || V25_BAD[code]) return null;
+    var img = document.createElement('img');
+    img.className = 'v23-em v24-em v25-em';
+    img.alt = ch;
+    img.draggable = false;
+    img.decoding = 'sync';
+    img.setAttribute('aria-hidden', 'true');
+    var hit = V25_OK[code];
+    if (hit) { img.src = hit; return img; }
+    var tri = 0;
+    img.setAttribute('data-v25pend', '1');
+    img.onload = function () {
+      img.removeAttribute('data-v25pend');
+      v25Cache(code, img.src);
+    };
+    img.onerror = function () {
+      tri++;
+      if (tri < V24_CDN.length) { img.src = V24_CDN[tri] + code + '.png'; return; }
+      V25_BAD[code] = 1;
+      if (img.parentNode) img.parentNode.replaceChild(document.createTextNode(ch), img);
+    };
+    img.src = V24_CDN[0] + code + '.png';
+    return img;
+  }
+
+  function v25Flush() {
+    v25Timer = null;
+    if (!v25Dirty) return;
+    v25Dirty = false;
+    v25Busy = true;
+    try { v24Walk(document.body); } catch (e) {}
+    v25Busy = false;
+  }
+
+  function v25Poke(ms) {
+    v25Dirty = true;
+    if (v25Timer) return;
+    v25Timer = setTimeout(v25Flush, ms || 60);
+  }
+
+  function v25Observe() {
+    if (window.__v25obs || !window.MutationObserver || !document.body) return;
+    var obs = new MutationObserver(function (recs) {
+      if (v25Busy) return;
+      for (var i = 0; i < recs.length; i++) {
+        var r = recs[i];
+        if (r.type === 'characterData') { v25Poke(50); return; }
+        if (r.addedNodes && r.addedNodes.length) { v25Poke(50); return; }
+      }
+    });
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.__v25obs = obs;
+  }
+
+  /* ---------- почта и телефон в карточке профиля ---------- */
+  function v25Digits(v) { return String(v || '').replace(/[^0-9]/g, ''); }
+
+  function v25Phone(raw) {
+    var d = v25Digits(raw);
+    if (d.length === 11 && d.charAt(0) === '8') d = '7' + d.slice(1);
+    if (d.length === 10) d = '7' + d;
+    if (d.length !== 11 || d.charAt(0) !== '7') return null;
+    return '+7 ' + d.slice(1, 4) + ' ' + d.slice(4, 7) + '-' + d.slice(7, 9) + '-' + d.slice(9, 11);
+  }
+
+  function v25MailOk(v) {
+    return /^[a-zA-Z0-9._%+-]{2,40}@[a-zA-Z0-9.-]{2,30}\.[a-zA-Z]{2,10}$/.test(String(v || '').trim());
+  }
+
+  function v25Busy2(kind, value, selfId) {
+    var all = {};
+    try { all = loadUsers() || {}; } catch (e) { return false; }
+    var keys = Object.keys(all), i, u;
+    var probe = kind === 'phone' ? v25Digits(value) : String(value).trim().toLowerCase();
+    for (i = 0; i < keys.length; i++) {
+      u = all[keys[i]];
+      if (!u || String(u.id) === String(selfId)) continue;
+      if (kind === 'phone' && v25Digits(u.phone) === probe && probe) return true;
+      if (kind === 'email' && String(u.email || '').trim().toLowerCase() === probe && probe) return true;
+    }
+    return false;
+  }
+
+  function v25Say(title, sub, kind) {
+    try { if (typeof toast === 'function') { toast(title, sub, kind || 'ok'); return; } } catch (e) {}
+    try { if (typeof v19Toast === 'function') v19Toast(title + ' ' + (sub || '')); } catch (e2) {}
+  }
+
+  function v25EditContact(kind) {
+    var u = current;
+    if (!u) return;
+    var isPhone = kind === 'phone';
+    var title = isPhone ? 'Изменить телефон' : 'Изменить почту';
+    var cur = isPhone ? (u.phone || '') : (u.email || '');
+    var ph = isPhone ? '+7 900 000-00-00' : 'name@slimbank.ru';
+    var hint = isPhone
+      ? 'Российский номер: 11 цифр, начинается с +7. Номер должен быть свободен.'
+      : 'Например client@slimbank.ru. Почта должна быть свободна.';
+    modal({
+      title: title,
+      okText: 'Сохранить',
+      cancelText: 'Отмена',
+      body: '<div class="field"><label for="v25In">' + (isPhone ? 'Телефон' : 'E-mail') + '</label>' +
+        '<input id="v25In" value="' + esc(cur) + '" placeholder="' + ph + '" autocomplete="off" /></div>' +
+        '<div class="v25-hint" id="v25Hint">' + hint + '</div>',
+      onOk: function (root) {
+        var inp = document.getElementById('v25In');
+        var val = inp ? inp.value : '';
+        var box = document.getElementById('v25Hint');
+        function bad(msg) {
+          if (box) { box.className = 'v25-hint bad'; box.textContent = msg; }
+          v25Say('Не сохранено', msg, 'bad');
+          return false;
+        }
+        if (isPhone) {
+          var fmt = v25Phone(val);
+          if (!fmt) return bad('Нужен российский номер из 11 цифр');
+          if (v25Busy2('phone', fmt, u.id)) return bad('Такой номер уже занят другим клиентом');
+          u.phone = fmt;
+        } else {
+          var mail = String(val).trim();
+          if (!v25MailOk(mail)) return bad('Неверный формат почты');
+          if (v25Busy2('email', mail, u.id)) return bad('Такая почта уже занята');
+          u.email = mail;
+        }
+        try { saveUser(u); } catch (e) {}
+        try { render(u, false); } catch (e2) {}
+        try { if (typeof v19PaintProfile === 'function') v19PaintProfile(u); } catch (e3) {}
+        var srv = window.SlimServer;
+        try { if (srv && srv.online && typeof srv.syncNow === 'function') srv.syncNow(true); } catch (e4) {}
+        v25Say('Сохранено', isPhone ? u.phone : u.email, 'ok');
+        v25Poke(40);
+        return true;
+      }
+    });
+  }
+
+  function v25Contacts() {
+    var ph = document.getElementById('pPhone');
+    var em = document.getElementById('pEmail');
+    if (ph && !ph.dataset.v25) {
+      ph.dataset.v25 = '1';
+      ph.classList.add('v25-ed');
+      ph.title = 'Нажмите, чтобы изменить телефон';
+      ph.addEventListener('click', function () { v25EditContact('phone'); });
+    }
+    if (em && !em.dataset.v25) {
+      em.dataset.v25 = '1';
+      em.classList.add('v25-ed');
+      em.title = 'Нажмите, чтобы изменить почту';
+      em.addEventListener('click', function () { v25EditContact('email'); });
+    }
+  }
+
+  function v25Init() {
+    try { v24Emoji = v25MakeEmoji; } catch (e) {}
+    try { v25Observe(); } catch (e2) {}
+    try { v25Contacts(); } catch (e3) {}
+    v25Poke(30);
+  }
+
+  window.__v25 = {
+    init: v25Init,
+    emoji: v25MakeEmoji,
+    poke: v25Poke,
+    phone: v25Phone,
+    mail: v25MailOk,
+    edit: v25EditContact,
+    cache: V25_OK,
+    bad: V25_BAD,
+    retry: function () {
+      var k;
+      for (k in V25_BAD) { if (Object.prototype.hasOwnProperty.call(V25_BAD, k)) delete V25_BAD[k]; }
+      v25Poke(20);
+    }
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', v25Init);
+  else v25Init();
+  setTimeout(v25Init, 220);
+  setTimeout(v25Init, 1400);
+  setInterval(function () { try { v25Contacts(); } catch (e) {} }, 2600);
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
