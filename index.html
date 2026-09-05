@@ -7940,8 +7940,10 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
       shown++;
     }
     var nums = u.ownNums || [];
-    for (var j = 0; j < nums.length && j < 4; j++) {
-      html += '<span class="pr-tag">' + esc(typeof fmtNum === "function" ? fmtNum(nums[j]) : nums[j]) + '</span>';
+    for (var j = 0; j < nums.length && j < 1; j++) {
+      var numTxt = String(nums[j] == null ? "" : nums[j]);
+      try { if (typeof fmtNum === "function") numTxt = String(fmtNum(nums[j]) || numTxt); } catch (eNum) {}
+      html += '<span class="pr-tag">' + esc(numTxt) + '</span>';
     }
     if (!shown && !nums.length) html += '<span class="pr-tag more">купите юзернейм в Аукционе</span>';
     box.innerHTML = html;
@@ -10889,6 +10891,626 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   setTimeout(v20Init, 80);
   setTimeout(v20Init, 1500);
   setInterval(function () { try { v20PaintSkins(); v20RegEnsure(); v20KillOldPanel(); } catch (e) {} }, 900);
+
+
+  /* ==================================================================
+     v21 - профиль, аватары, верификация, общий аукцион
+     ================================================================== */
+  var V21_RESET_KEY = "slimbank_reset_v21";
+  var V21_VER_COST = 1000000000;
+
+  /* --- одноразовая чистка старых аккаунтов --- */
+  (function v21Wipe() {
+    try {
+      if (localStorage.getItem(V21_RESET_KEY)) return;
+      localStorage.removeItem("slimbank_users_v3");
+      localStorage.removeItem("slimbank_session_v3");
+      localStorage.removeItem("slimbank_token_v2");
+      localStorage.removeItem("slimbank_lots_v2");
+      localStorage.removeItem("slimbank_limited_v1");
+      localStorage.setItem(V21_RESET_KEY, "1");
+    } catch (e) {}
+  })();
+
+  function v21Css() {
+    if (document.getElementById("v21css")) return;
+    var st = document.createElement("style");
+    st.id = "v21css";
+    st.textContent = [
+      /* сетки выбора */
+      ".v19-avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:12px;margin-top:12px}",
+      ".v19-av{height:72px;border-radius:22px;border:2px solid transparent;cursor:pointer;padding:0;",
+      "display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;",
+      "transition:transform .22s cubic-bezier(.2,1.1,.3,1),box-shadow .22s,border-color .18s}",
+      ".v19-av span{filter:drop-shadow(0 2px 5px rgba(0,0,0,.35))}",
+      ".v19-av:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 14px 28px rgba(0,0,0,.28)}",
+      ".v19-av.on{border-color:#fff;transform:scale(1.06);box-shadow:0 12px 30px rgba(0,0,0,.34)}",
+      ".v19-av.on:after{content:'';position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;",
+      "border-radius:50%;background:#22c55e url(data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='white'%3E%3Cpath%20d='M9.6%2016.2%205.4%2012l1.4-1.4%202.8%202.8%207-7L18%207.8z'/%3E%3C/svg%3E) center/14px no-repeat;",
+      "box-shadow:0 4px 12px rgba(34,197,94,.5)}",
+      ".v19-bngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;margin-top:12px}",
+      ".v19-bn{height:58px;border-radius:16px;border:2px solid transparent;cursor:pointer;padding:0;",
+      "transition:transform .2s,box-shadow .2s,border-color .18s}",
+      ".v19-bn:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(0,0,0,.24)}",
+      ".v19-bn.on{border-color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3)}",
+      /* кнопки загрузки */
+      ".v19-upload,.v21-up{display:inline-flex;align-items:center;gap:10px;margin-top:14px;padding:12px 20px;",
+      "border-radius:16px;cursor:pointer;font-weight:650;font-size:14px;color:#fff;border:0;font-family:inherit;",
+      "background:linear-gradient(135deg,#5b7cff,#8b5cf6);box-shadow:0 12px 26px rgba(91,124,255,.32);",
+      "transition:transform .2s,box-shadow .2s}",
+      ".v19-upload:hover,.v21-up:hover{transform:translateY(-2px);box-shadow:0 18px 34px rgba(91,124,255,.44)}",
+      ".v19-upload:active,.v21-up:active{transform:translateY(0) scale(.98)}",
+      ".v19-upload:before,.v21-up:before{content:'';width:18px;height:18px;flex:none;",
+      "background:url(data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%2016V4M7%209l5-5%205%205M4%2017v2a2%202%200%200%200%202%202h12a2%202%200%200%200%202-2v-2'/%3E%3C/svg%3E) center/contain no-repeat}",
+      ".v21-uprow{display:flex;gap:12px;flex-wrap:wrap;align-items:center}",
+      ".v21-lbl{font-size:13px;opacity:.62;margin-top:16px;display:block;font-weight:600;letter-spacing:.02em;text-transform:uppercase}",
+      /* карандаши */
+      ".v21-pen{width:30px;height:30px;flex:none;border-radius:50%;border:1px solid rgba(127,127,127,.28);",
+      "background:rgba(127,127,127,.12);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;",
+      "padding:0;margin-left:8px;vertical-align:-8px;transition:transform .2s,background .2s}",
+      ".v21-pen:hover{transform:rotate(-12deg) scale(1.1);background:rgba(91,124,255,.22)}",
+      ".v21-pen svg{width:15px;height:15px;opacity:.85}",
+      ".v21-penav{position:absolute;right:-2px;bottom:-2px;width:34px;height:34px;border-radius:50%;border:3px solid var(--canvas,#12141c);",
+      "background:linear-gradient(135deg,#5b7cff,#8b5cf6);color:#fff;cursor:pointer;display:flex;align-items:center;",
+      "justify-content:center;padding:0;z-index:6;box-shadow:0 8px 20px rgba(91,124,255,.42);transition:transform .2s}",
+      ".v21-penav:hover{transform:scale(1.12) rotate(-10deg)}",
+      ".v21-penav svg{width:15px;height:15px}",
+      /* профиль */
+      ".pr-head{justify-content:flex-start!important;text-align:left!important;align-items:flex-end!important}",
+      ".pr-head #prAvatar{margin-left:6px!important;margin-right:18px!important;position:relative}",
+      ".pr-id{text-align:left!important;align-items:flex-start!important}",
+      ".un-box,.un-hint,.pr-rows,#prNames,#prNums,.v21-off{display:none!important}",
+      ".v21-also{margin-top:7px;font-size:13.5px;opacity:.8;line-height:1.6}",
+      ".v21-also i{font-style:normal;opacity:.55;margin-right:5px}",
+      ".v21-also b{font-weight:600;background:rgba(127,127,127,.14);border-radius:9px;padding:3px 9px;margin:0 5px 5px 0;display:inline-block}",
+      ".v21-uname{display:inline-flex;align-items:center;gap:2px}",
+      ".v21-tick{display:inline-flex;vertical-align:-3px;margin-left:6px;animation:v21tick .7s cubic-bezier(.2,1.4,.3,1) both}",
+      "@keyframes v21tick{from{opacity:0;transform:scale(.3) rotate(-40deg)}to{opacity:1;transform:none}}",
+      ".v21-tick svg{filter:drop-shadow(0 3px 8px rgba(56,163,255,.6))}",
+      /* окно верификации */
+      ".v21-vhero{margin:16px -24px 0;padding:26px 24px 22px;text-align:center;position:relative;overflow:hidden;",
+      "background:radial-gradient(120% 130% at 50% 0,rgba(56,163,255,.28),transparent 62%)}",
+      ".v21-vhero .big{width:96px;height:96px;margin:0 auto 14px;animation:v21float 3.4s ease-in-out infinite}",
+      "@keyframes v21float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}",
+      ".v21-vhero h4{margin:0 0 6px;font-size:21px;letter-spacing:-.3px}",
+      ".v21-vhero p{margin:0;opacity:.7;font-size:14px;line-height:1.55}",
+      ".v21-perks{display:grid;gap:10px;margin:18px 0 6px}",
+      ".v21-perk{display:flex;gap:11px;align-items:flex-start;padding:13px 15px;border-radius:15px;",
+      "background:rgba(127,127,127,.09);font-size:13.5px;line-height:1.45}",
+      ".v21-perk i{font-style:normal;font-size:16px;line-height:1.2}",
+      ".v21-price{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;",
+      "padding:15px 18px;border-radius:17px;background:rgba(127,127,127,.1)}",
+      ".v21-price b{font-size:20px}",
+      ".v21-price span{opacity:.6;font-size:12.5px;display:block}",
+      ".v21-buy{width:100%;margin-top:16px;padding:15px;border-radius:17px;border:0;cursor:pointer;",
+      "font:inherit;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,#38a3ff,#5b7cff 55%,#8b5cf6);",
+      "box-shadow:0 16px 34px rgba(56,163,255,.36);transition:transform .2s,box-shadow .2s}",
+      ".v21-buy:hover{transform:translateY(-2px);box-shadow:0 22px 44px rgba(56,163,255,.48)}",
+      ".v21-buy[disabled]{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}",
+      /* аукцион */
+      ".v19-lot.remote{border-color:rgba(56,163,255,.35)}",
+      ".v19-lot .who{display:flex;align-items:center;gap:5px;font-size:12.5px;opacity:.72;margin:7px 0 11px}",
+      ".v21-live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;opacity:.75}",
+      ".v21-live i{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;",
+      "box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:v21pulse 1.9s infinite}",
+      "@keyframes v21pulse{70%{box-shadow:0 0 0 9px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}",
+      ".v21-live.off i{background:#f59e0b;animation:none}"
+    ].join("");
+    document.head.appendChild(st);
+  }
+
+  function v21Pencil() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  }
+
+  function v21TickSvg(size) {
+    var w = size || 20;
+    return '<span class="v21-tick" title="Верифицированный аукционер">' +
+      '<svg width="' + w + '" height="' + w + '" viewBox="0 0 24 24">' +
+      '<defs><linearGradient id="v21g" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#7dd3fc"/><stop offset=".55" stop-color="#38a3ff"/><stop offset="1" stop-color="#6366f1"/>' +
+      '</linearGradient></defs>' +
+      '<path fill="url(#v21g)" d="M12 1.4l2.7 2.2 3.4-.4 1.1 3.3 3 1.8-1.3 3.2 1.3 3.2-3 1.8-1.1 3.3-3.4-.4L12 22.6l-2.7-2.2-3.4.4-1.1-3.3-3-1.8L3.1 12 1.8 8.8l3-1.8 1.1-3.3 3.4.4z"/>' +
+      '<path fill="#fff" d="M10.5 15.8l-3.2-3.2 1.4-1.4 1.8 1.8 4.8-4.8 1.4 1.4z"/></svg></span>';
+  }
+
+  /* ---------- регистрация: красивый выбор ---------- */
+  function v21RegSkins() {
+    var grid = document.querySelector('#regForm .v19-bngrid');
+    if (!grid || grid.dataset.v21) return;
+    grid.dataset.v21 = "1";
+    var lbl = document.createElement("label");
+    lbl.className = "v19-upload";
+    lbl.innerHTML = '<input type="file" id="regBnFile" accept="image/*" hidden><span>Свой баннер</span>';
+    grid.parentNode.appendChild(lbl);
+    var f = lbl.querySelector("#regBnFile");
+    f.addEventListener("change", function () {
+      var file = f.files && f.files[0];
+      if (!file) return;
+      if (file.size > 900000) { v20Say("Файл больше 900 КБ", "Выберите картинку меньше", "bad"); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        v19Reg.banner = String(fr.result);
+        var all = grid.querySelectorAll("[data-v19bn]"), i;
+        for (i = 0; i < all.length; i++) all[i].classList.remove("on");
+        v20Say("Баннер загружен", "Он появится в профиле", "ok");
+      };
+      fr.readAsDataURL(file);
+    });
+    var av = document.querySelector('#regForm .v19-avgrid');
+    if (av) {
+      var up = document.querySelector('#regForm .v19-upload span');
+      if (up) up.textContent = "Своя картинка";
+    }
+  }
+
+  /* ---------- профиль ---------- */
+  function v21HideOld() {
+    var pane = document.querySelector('.tabpane[data-pane="profile"]');
+    if (!pane) return;
+    var t = pane.querySelectorAll(".pr-title"), i;
+    for (i = 0; i < t.length; i++) {
+      var s = (t[i].textContent || "");
+      if (s.indexOf("юзернейм") >= 0 || s.indexOf("номера") >= 0) t[i].classList.add("v21-off");
+    }
+    var tags = document.getElementById("prTags");
+    if (tags) tags.classList.add("v21-off");
+  }
+
+  function v21OwnNames(u) {
+    var out = [], seen = {}, i;
+    var main = String((u && u.username) || "").toLowerCase();
+    var list = (u && u.ownNames) || [];
+    for (i = 0; i < list.length; i++) {
+      var n = String(list[i] || "").replace(/^@+/, "").toLowerCase();
+      if (!n || n === main || seen[n]) continue;
+      seen[n] = 1;
+      out.push(n);
+    }
+    return out;
+  }
+
+  function v21Also(u) {
+    var user = document.getElementById("prUser");
+    if (!user || !user.parentNode) return;
+    var box = document.getElementById("v21Also");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "v21Also";
+      box.className = "v21-also";
+      if (user.nextSibling) user.parentNode.insertBefore(box, user.nextSibling);
+      else user.parentNode.appendChild(box);
+    }
+    var names = v21OwnNames(u), h = "", i;
+    if (!names.length) { box.innerHTML = ""; box.style.display = "none"; return; }
+    box.style.display = "";
+    h = '<i>также он</i>';
+    for (i = 0; i < names.length; i++) h += '<b>@' + v20Esc(names[i]) + '</b>';
+    box.innerHTML = h;
+  }
+
+  function v21OneNumber(u) {
+    if (!u || !u.ownNums) return;
+    if (u.ownNums.length > 1) {
+      u.ownNums = [u.ownNums[u.ownNums.length - 1]];
+      try { saveUser(u); } catch (e) {}
+    }
+  }
+
+  function v21Pens(u) {
+    var user = document.getElementById("prUser");
+    if (user && !document.getElementById("v21PenUser")) {
+      var b = document.createElement("button");
+      b.id = "v21PenUser";
+      b.type = "button";
+      b.className = "v21-pen";
+      b.title = "Изменить юзернейм";
+      b.innerHTML = v21Pencil();
+      b.addEventListener("click", v21EditUser);
+      user.appendChild(b);
+    }
+    var av = document.getElementById("prAvatar");
+    if (av && !document.getElementById("v21PenAv")) {
+      var p = document.createElement("button");
+      p.id = "v21PenAv";
+      p.type = "button";
+      p.className = "v21-penav";
+      p.title = "Фото и баннер";
+      p.innerHTML = v21Pencil();
+      p.addEventListener("click", function (e) { e.stopPropagation(); v21EditMedia(); });
+      av.appendChild(p);
+    }
+  }
+
+  function v21UserLine(u) {
+    var el = document.getElementById("prUser");
+    if (!el || !u) return;
+    var name = u.username || "";
+    var pen = document.getElementById("v21PenUser");
+    var txt = el.querySelector(".v21-uname");
+    if (!txt) {
+      el.textContent = "";
+      txt = document.createElement("span");
+      txt.className = "v21-uname";
+      el.insertBefore(txt, el.firstChild);
+      if (pen) el.appendChild(pen);
+    }
+    txt.innerHTML = "@" + v20Esc(name || "slimuser") + (u.verified ? v21TickSvg(19) : "");
+  }
+
+  function v21EditUser() {
+    var u = current;
+    if (!u) return;
+    var h = [
+      '<div class="v19-sub" style="margin-top:6px">Латиница, цифры и _ · от 3 до 20 символов</div>',
+      '<div class="v19-row" style="margin-top:14px">',
+      '<input class="v19-in" id="v21UnIn" maxlength="20" autocomplete="off" spellcheck="false" placeholder="юзернейм" value="' + v20Esc(u.username || "") + '">',
+      '</div>',
+      '<div class="v19-who" id="v21UnHint"></div>',
+      '<button class="v21-buy" id="v21UnGo" type="button">Сохранить</button>'
+    ].join("");
+    v19Modal("Юзернейм", h, function (ov, close) {
+      var inp = ov.querySelector("#v21UnIn");
+      var hint = ov.querySelector("#v21UnHint");
+      var go = ov.querySelector("#v21UnGo");
+      function check() {
+        var v = String(inp.value || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+        if (inp.value !== v) inp.value = v;
+        if (v === String(u.username || "").toLowerCase()) {
+          hint.className = "v19-who"; hint.textContent = "Это ваш текущий юзернейм";
+          go.disabled = true; return;
+        }
+        if (v.length < 3) {
+          hint.className = "v19-who"; hint.textContent = "Минимум 3 символа";
+          go.disabled = true; return;
+        }
+        var own = v21OwnNames(u).indexOf(v) >= 0;
+        if (!own && v20NameTaken(v, u.id)) {
+          hint.className = "v19-who v19-bad"; hint.textContent = "@" + v + " уже занят";
+          go.disabled = true; return;
+        }
+        hint.className = "v19-who v19-ok";
+        hint.textContent = own ? ("@" + v + " — ваш купленный юзернейм") : ("@" + v + " свободен");
+        go.disabled = false;
+      }
+      inp.addEventListener("input", check);
+      check();
+      go.addEventListener("click", function () {
+        var v = String(inp.value || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+        if (v.length < 3) return;
+        var old = String(u.username || "");
+        if (old && v21OwnNames(u).indexOf(old.toLowerCase()) < 0) {
+          u.ownNames = u.ownNames || [];
+          u.ownNames.push(old);
+        }
+        u.username = v;
+        u.ownNames = (u.ownNames || []).filter(function (x) {
+          return String(x).replace(/^@+/, "").toLowerCase() !== v;
+        });
+        saveUser(u);
+        try { render(u, false); } catch (e) {}
+        v21Refresh();
+        var srv = window.SlimServer;
+        if (srv && srv.online && typeof srv.claimUsername === "function") srv.claimUsername(v).catch(function () {});
+        v20Say("Юзернейм обновлён", "@" + v, "ok");
+        close();
+      });
+    });
+  }
+
+  function v21MediaGrid(kind, cur) {
+    var src = kind === "av" ? V19_AVATARS : V19_BANNERS;
+    var cls = kind === "av" ? "v19-av" : "v19-bn";
+    var h = '<div class="' + (kind === "av" ? "v19-avgrid" : "v19-bngrid") + '">', i;
+    for (i = 0; i < src.length; i++) {
+      var on = String(cur || "") === src[i].id ? " on" : "";
+      h += '<button type="button" class="' + cls + on + '" data-v21' + kind + '="' + src[i].id +
+           '" style="background:' + src[i].g + '">' + (kind === "av" ? '<span>' + src[i].e + '</span>' : '') + '</button>';
+    }
+    return h + "</div>";
+  }
+
+  function v21EditMedia() {
+    var u = current;
+    if (!u) return;
+    var h = [
+      '<span class="v21-lbl">Фото профиля</span>',
+      v21MediaGrid("av", u.avatar),
+      '<label class="v21-up"><input type="file" accept="image/*" id="v21AvFile" hidden><span>Своя картинка</span></label>',
+      '<span class="v21-lbl">Баннер</span>',
+      v21MediaGrid("bn", u.banner),
+      '<label class="v21-up"><input type="file" accept="image/*" id="v21BnFile" hidden><span>Свой баннер</span></label>'
+    ].join("");
+    v19Modal("Фото и баннер", h, function (ov, close) {
+      function mark(sel, el) {
+        var a = ov.querySelectorAll(sel), i;
+        for (i = 0; i < a.length; i++) a[i].classList.remove("on");
+        if (el) el.classList.add("on");
+      }
+      var avs = ov.querySelectorAll("[data-v21av]"), i;
+      for (i = 0; i < avs.length; i++) {
+        avs[i].addEventListener("click", function () {
+          u.avatar = this.getAttribute("data-v21av");
+          mark("[data-v21av]", this);
+          v20SaveSkin();
+          v21Refresh();
+        });
+      }
+      var bns = ov.querySelectorAll("[data-v21bn]"), j;
+      for (j = 0; j < bns.length; j++) {
+        bns[j].addEventListener("click", function () {
+          u.banner = this.getAttribute("data-v21bn");
+          mark("[data-v21bn]", this);
+          v20SaveSkin();
+          v21Refresh();
+        });
+      }
+      function upload(id, field, okText) {
+        var f = ov.querySelector(id);
+        if (!f) return;
+        f.addEventListener("change", function () {
+          var file = f.files && f.files[0];
+          if (!file) return;
+          if (file.size > 900000) { v20Say("Файл больше 900 КБ", "Выберите картинку меньше", "bad"); return; }
+          var fr = new FileReader();
+          fr.onload = function () {
+            u[field] = String(fr.result);
+            v20SaveSkin();
+            v21Refresh();
+            v20Say(okText, "", "ok");
+            close();
+          };
+          fr.readAsDataURL(file);
+        });
+      }
+      upload("#v21AvFile", "avatar", "Фото обновлено");
+      upload("#v21BnFile", "banner", "Баннер обновлён");
+    });
+  }
+
+  /* ---------- верификация аукционера ---------- */
+  function v21BuyVerified() {
+    var u = current;
+    if (!u) return;
+    if (u.verified) { v20Say("У вас уже есть галочка", "", "ok"); return; }
+    var enough = (u.balance || 0) >= V21_VER_COST;
+    var h = [
+      '<div class="v21-vhero">',
+      '<div class="big">' + v21TickSvg(96).replace('class="v21-tick"', 'class="v21-tick" style="display:block"') + '</div>',
+      '<h4>Верификация аукционера</h4>',
+      '<p>Синяя галочка рядом с юзернеймом и право выставлять лоты на аукционе</p>',
+      '</div>',
+      '<div class="v21-perks">',
+      '<div class="v21-perk"><i>✦</i><span>Галочка в профиле и в карточках ваших лотов</span></div>',
+      '<div class="v21-perk"><i>✦</i><span>Можно продавать юзернеймы и номера другим игрокам</span></div>',
+      '<div class="v21-perk"><i>✦</i><span>Ваши лоты поднимаются выше в общем списке</span></div>',
+      '</div>',
+      '<div class="v21-price"><div><span>Стоимость</span><b>' + v20Cash(V21_VER_COST) + '</b></div>',
+      '<div style="text-align:right"><span>На счёту</span><b>' + v20Cash(u.balance || 0) + '</b></div></div>',
+      '<button class="v21-buy" id="v21VerGo" type="button"' + (enough ? "" : " disabled") + '>' +
+      (enough ? "Купить галочку" : "Недостаточно средств") + '</button>'
+    ].join("");
+    v19Modal("Статус аукционера", h, function (ov, close) {
+      var go = ov.querySelector("#v21VerGo");
+      if (!go || go.disabled) return;
+      go.addEventListener("click", function () {
+        if ((current.balance || 0) < V21_VER_COST) { v20Say("Недостаточно средств", "", "bad"); return; }
+        current.balance -= V21_VER_COST;
+        current.verified = true;
+        try {
+          pushTx(current, { ts: Date.now(), title: "Верификация аукционера", sub: "Статус продавца", amount: V21_VER_COST, kind: "out", status: "Успешно" });
+        } catch (e) {}
+        saveUser(current);
+        try { render(current, true); } catch (e) {}
+        var srv = window.SlimServer;
+        if (srv && srv.online && typeof srv.buyVerified === "function") srv.buyVerified().catch(function () {});
+        v21Refresh();
+        try { if (typeof burst === "function") burst(60); } catch (e) {}
+        v20Say("Галочка ваша", "Теперь можно выставлять лоты", "ok");
+        close();
+      });
+    });
+  }
+
+  /* ---------- общий аукцион ---------- */
+  var v21Remote = [];
+  var v21LotsBusy = false;
+
+  function v21FetchLots() {
+    var srv = window.SlimServer;
+    if (!srv || !srv.online || typeof srv.lots !== "function" || v21LotsBusy) return;
+    v21LotsBusy = true;
+    srv.lots(80).then(function (res) {
+      v21LotsBusy = false;
+      var items = (res && (res.items || res.lots)) || [];
+      if (!items.length && res && res.ok === false) return;
+      v21Remote = items;
+      v21RenderLots();
+    }).catch(function () { v21LotsBusy = false; });
+  }
+
+  function v21LotKey(L) {
+    return String(L.kind || "") + ":" + String(L.item || "").toLowerCase();
+  }
+
+  function v21AllLots() {
+    var out = [], seen = {}, i;
+    var local = [];
+    try { local = v19Lots(); } catch (e) { local = []; }
+    for (i = 0; i < v21Remote.length; i++) {
+      var R = v21Remote[i];
+      if (!R) continue;
+      var item = {
+        id: "S" + R.id, sid: R.id, remote: true,
+        kind: R.kind, item: R.item, price: Number(R.price) || 0,
+        sellerName: R.seller || "Игрок", verified: !!R.verified,
+        mine: !!(current && R.seller && current.username && String(R.seller).toLowerCase().indexOf(String(current.username).toLowerCase()) >= 0)
+      };
+      seen[v21LotKey(item)] = 1;
+      out.push(item);
+    }
+    for (i = 0; i < local.length; i++) {
+      var L = local[i];
+      if (!L || L.sold) continue;
+      if (seen[v21LotKey(L)]) continue;
+      out.push({
+        id: L.id, remote: false, kind: L.kind, item: L.item, price: L.price,
+        sellerName: L.sellerName || "Игрок", verified: true,
+        mine: !!(current && L.seller === current.id)
+      });
+    }
+    out.sort(function (a, b) { return (b.verified ? 1 : 0) - (a.verified ? 1 : 0); });
+    return out;
+  }
+
+  function v21RenderLots() {
+    var grid = document.getElementById("v19LotGrid");
+    if (!grid) return;
+    var lots = v21AllLots(), h = "", i, mh = "";
+    for (i = 0; i < lots.length; i++) {
+      var L = lots[i];
+      var title = L.kind === "name" ? "@" + L.item : L.item;
+      h += '<div class="v19-lot' + (L.remote ? " remote" : "") + '">' +
+        '<div class="t">' + v20Esc(title) + '</div>' +
+        '<div class="who">' + v20Esc(L.sellerName) + (L.verified ? v21TickSvg(15) : "") + '</div>' +
+        '<div style="font-weight:700;margin-bottom:10px">' + v20Cash(L.price) + '</div>' +
+        (L.mine
+          ? '<button class="v19-b x" data-v21del="' + L.id + '" type="button">Снять</button>'
+          : '<button class="v19-b" data-v21buy="' + L.id + '" type="button">Купить</button>') +
+        '</div>';
+      if (L.mine) mh += '<div class="v19-li"><span>' + v20Esc(title) + '</span><b>' + v20Cash(L.price) + '</b></div>';
+    }
+    grid.innerHTML = lots.length ? h : '<div class="v19-empty">Лотов пока нет — выставьте первый</div>';
+    var mine = document.getElementById("v19MyLots");
+    if (mine) mine.innerHTML = mh;
+    var b = grid.querySelectorAll("[data-v21buy]"), j;
+    for (j = 0; j < b.length; j++) {
+      b[j].addEventListener("click", function () { v21BuyLot(this.getAttribute("data-v21buy")); });
+    }
+    var d = grid.querySelectorAll("[data-v21del]"), k;
+    for (k = 0; k < d.length; k++) {
+      d[k].addEventListener("click", function () { v21CancelLot(this.getAttribute("data-v21del")); });
+    }
+    var head = grid.parentNode ? grid.parentNode.querySelector(".v19-h") : null;
+    if (head && !head.querySelector(".v21-live")) {
+      var live = document.createElement("span");
+      live.className = "v21-live";
+      head.appendChild(live);
+    }
+    var lv = head ? head.querySelector(".v21-live") : null;
+    if (lv) {
+      var on = !!(window.SlimServer && window.SlimServer.online);
+      lv.className = "v21-live" + (on ? "" : " off");
+      lv.innerHTML = '<i></i>' + (on ? "Общий аукцион · виден всем" : "Сервер оффлайн · только ваши лоты");
+    }
+  }
+
+  function v21FindLot(id) {
+    var lots = v21AllLots(), i;
+    for (i = 0; i < lots.length; i++) if (String(lots[i].id) === String(id)) return lots[i];
+    return null;
+  }
+
+  function v21BuyLot(id) {
+    var u = current, L = v21FindLot(id);
+    if (!u || !L) return;
+    if ((u.balance || 0) < L.price) { v20Say("Недостаточно средств", "Доступно " + v20Cash(u.balance), "bad"); return; }
+    if (L.kind === "num" && (u.ownNums || []).length >= 1) {
+      v20Say("Один номер на аккаунт", "Сначала продайте свой номер", "bad");
+      return;
+    }
+    if (L.remote) {
+      var srv = window.SlimServer;
+      if (!srv || !srv.online || typeof srv.lotBuy !== "function") { v20Say("Сервер недоступен", "", "bad"); return; }
+      srv.lotBuy(L.sid).then(function (res) {
+        if (res && res.error) { v20Say("Сервер: " + res.error, "", "bad"); return; }
+        u.balance = Math.max(0, (u.balance || 0) - L.price);
+        if (L.kind === "name") { u.ownNames = u.ownNames || []; u.ownNames.push(L.item); }
+        else { u.ownNums = [L.item]; }
+        try { pushTx(u, { ts: Date.now(), title: "Покупка на аукционе", sub: L.kind === "name" ? "@" + L.item : L.item, amount: L.price, kind: "out", status: "Успешно" }); } catch (e) {}
+        saveUser(u);
+        try { render(u, true); } catch (e) {}
+        v21Refresh();
+        v21FetchLots();
+        if (typeof srv.syncNow === "function") srv.syncNow(true);
+        v20Say("Куплено", L.kind === "name" ? "@" + L.item : L.item, "ok");
+      }).catch(function () { v20Say("Не удалось купить", "", "bad"); });
+      return;
+    }
+    try { v19BuyLot(L.id); } catch (e) {}
+    v21Refresh();
+    v21RenderLots();
+  }
+
+  function v21CancelLot(id) {
+    var L = v21FindLot(id);
+    if (!L) return;
+    if (L.remote) {
+      var srv = window.SlimServer;
+      if (srv && srv.lotCancel) srv.lotCancel(L.sid).then(function () { v21FetchLots(); }).catch(function () {});
+      return;
+    }
+    try { v19CancelLot(L.id); } catch (e) {}
+    v21RenderLots();
+  }
+
+  /* ---------- сводное обновление ---------- */
+  function v21Refresh() {
+    var u = current;
+    v21Css();
+    v21RegSkins();
+    v21HideOld();
+    if (!u) return;
+    v21OneNumber(u);
+    v21Pens(u);
+    v21UserLine(u);
+    v21Also(u);
+    try { v20PaintSkins(); } catch (e) {}
+    var vb = document.getElementById("v19VerBtn");
+    if (vb) {
+      if (u.verified) { vb.textContent = "Аукционер подтверждён"; vb.disabled = true; }
+      else { vb.textContent = "Статус аукционера"; vb.disabled = false; }
+    }
+    var av = document.getElementById("v19AvBtn");
+    if (av) av.textContent = "Фото и баннер";
+    var bn = document.getElementById("v19BnBtn");
+    if (bn && bn.parentNode) bn.parentNode.removeChild(bn);
+  }
+
+  function v21Hooks() {
+    if (window.__v21hooks) return;
+    window.__v21hooks = true;
+    try { v19BuyVerified = v21BuyVerified; } catch (e) {}
+    try { v19LoadLots = function () { v21RenderLots(); v21FetchLots(); }; } catch (e) {}
+    try { v19PickAvatar = v21EditMedia; } catch (e) {}
+    try { v19PickBanner = v21EditMedia; } catch (e) {}
+    try { v20PickAvatar = v21EditMedia; } catch (e) {}
+    try { v20PickBanner = v21EditMedia; } catch (e) {}
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest) return;
+      var v = e.target.closest("#v19VerBtn");
+      if (v) { e.preventDefault(); e.stopImmediatePropagation(); v21BuyVerified(); return; }
+      var a = e.target.closest("#v19AvBtn,#v19BnBtn,#v21PenAv");
+      if (a) { e.preventDefault(); e.stopImmediatePropagation(); v21EditMedia(); return; }
+      var un = e.target.closest("#unSave,#unCheck");
+      if (un) { e.preventDefault(); e.stopImmediatePropagation(); v21EditUser(); return; }
+    }, true);
+  }
+
+  function v21Init() {
+    try { v21Css(); } catch (e) {}
+    try { v21Hooks(); } catch (e) {}
+    try { v21Refresh(); } catch (e) {}
+    try { v21FetchLots(); } catch (e) {}
+  }
+
+  window.__v21 = { init: v21Init, refresh: v21Refresh, media: v21EditMedia, user: v21EditUser, verify: v21BuyVerified, lots: v21FetchLots };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v21Init);
+  setTimeout(v21Init, 120);
+  setTimeout(v21Init, 1600);
+  setInterval(function () { try { v21Refresh(); } catch (e) {} }, 1200);
+  setInterval(function () { try { v21FetchLots(); } catch (e) {} }, 15000);
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
