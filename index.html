@@ -2984,6 +2984,38 @@ h4, .v19-h b { font-weight:700 !important; }
   background-image:url(data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='%23071b10'%3E%3Cpath%20d='M9.6%2016.2%205.4%2012l1.4-1.4%202.8%202.8%207-7L18%207.8z'/%3E%3C/svg%3E);
   background-size:15px; background-position:center; background-repeat:no-repeat; }
 </style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Inter+Tight:wght@600;700;800&display=swap">
+<style id="v24css">
+:root, body, body.dark, body.light {
+  --display:'Inter Tight','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important;
+}
+body, button, input, select, textarea, .btn, .pill, .sn-item, .v19-b, .v21-buy {
+  font-family:var(--sans) !important;
+  font-optical-sizing:auto;
+  font-feature-settings:'cv11' 1,'ss01' 1;
+}
+body { font-weight:400 !important; letter-spacing:-.011em !important; line-height:1.55; }
+.btn, button, .pill, .sn-item, .v19-b, .v21-buy { font-weight:600 !important; letter-spacing:-.011em !important; }
+input, select, textarea { font-weight:500 !important; letter-spacing:-.008em !important; }
+h1,h2,h3,h4,.logo,.balance,.stat b,.kpi b,.plan .price,.pr-id h3,.v19-h b,.hero-stats div strong,.cardv .brand {
+  font-family:var(--display) !important;
+  font-weight:700 !important;
+  letter-spacing:-.022em !important;
+}
+h1 { font-weight:800 !important; letter-spacing:-.03em !important; }
+.pr-id h3 { font-weight:800 !important; font-size:25px !important; letter-spacing:-.026em !important; }
+.balance, .kpi b, .stat b, .cc-num, .v19-lot .t, .v21-price b, .pr-stat b {
+  font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
+}
+.muted, .hint, .v19-sub, .v19-who, .pr-user, .note { font-weight:450 !important; letter-spacing:-.005em !important; }
+
+.v24-bad { color:#FF8C82 !important; }
+.v24-good { color:#34D27B !important; }
+</style>
 </head>
 <body>
 <header id="siteHeader">
@@ -11828,7 +11860,8 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   }
 
   function v23Emojify() {
-    try { v23Scan(document.body); } catch (e) {}
+    try { if (typeof v24Emojify === "function") { v24Emojify(); return; } } catch (e) {}
+    try { v23Scan(document.body); } catch (e2) {}
   }
 
   /* ---------- шаг выбора аватара после кода из SMS ---------- */
@@ -11925,6 +11958,347 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   setTimeout(v23Init, 140);
   setTimeout(v23Init, 1200);
   setInterval(function () { try { v23Emojify(); } catch (e) {} }, 1400);
+
+
+  /* ================= v24: фиксы регистрации, имён, сервера, эмодзи ================= */
+  var V24_RESERVED = [
+    "admin","admins","administrator","administration","root","sudo","system","slim","slimbank",
+    "slim_bank","slimofficial","bank","banking","official","support","help","helpdesk","service",
+    "moderator","moder","mod","staff","team","security","verify","verified","owner","ceo","boss",
+    "api","bot","bots","news","info","mail","email","me","my","id","user","users","test","demo",
+    "casino","auction","promo","promocode","gift","gifts","wallet","crypto","money","cash","credit",
+    "telegram","tg","durov","vk","sber","sberbank","tinkoff","alfa","alfabank","vtb","gazprom",
+    "police","gov","fsb","king","top","pro","vip","elon","musk","putin","nikita"
+  ];
+
+  function v24Norm(n) {
+    return String(n == null ? "" : n).toLowerCase().replace(/^@+/, "").replace(/[^a-z0-9_]/g, "");
+  }
+
+  function v24Reserved(name) {
+    var n = v24Norm(name);
+    if (!n) return true;
+    if (V24_RESERVED.indexOf(n) >= 0) return true;
+    if (/^(admin|slim|slimbank|bank|support|official|moder|root)[_-]?[0-9]*$/.test(n)) return true;
+    return false;
+  }
+
+  function v24Me() {
+    try { return current && current.id ? String(current.id) : null; } catch (e) { return null; }
+  }
+
+  function v24LotNames(selfId) {
+    var out = [], i, arr, L, sid;
+    try { arr = v19Lots() || []; } catch (e) { arr = []; }
+    for (i = 0; i < arr.length; i++) {
+      L = arr[i] || {};
+      if (String(L.kind || "") !== "name") continue;
+      sid = String(L.sellerId || L.seller_id || L.owner || "");
+      if (selfId && sid && sid === String(selfId)) continue;
+      out.push(v24Norm(L.item));
+    }
+    try { arr = window.v21Remote || v21Remote || []; } catch (e2) { arr = []; }
+    for (i = 0; i < arr.length; i++) {
+      L = arr[i] || {};
+      if (String(L.kind || "") !== "name") continue;
+      sid = String(L.seller_id || L.sellerId || "");
+      if (selfId && sid && sid === String(selfId)) continue;
+      out.push(v24Norm(L.item));
+    }
+    return out;
+  }
+
+  function v24OnAuction(name, selfId) {
+    var n = v24Norm(name);
+    if (!n) return false;
+    var list = v24LotNames(selfId), i;
+    for (i = 0; i < list.length; i++) if (list[i] === n) return true;
+    return false;
+  }
+
+  var v24TakenBase = v20NameTaken;
+  v20NameTaken = function (name, selfId) {
+    var n = v24Norm(name);
+    if (!n || n.length < 3) return true;
+    if (v24Reserved(n)) return true;
+    if (v24OnAuction(n, selfId)) return true;
+    try { return v24TakenBase(n, selfId); } catch (e) { return false; }
+  };
+
+  function v24Why(name, selfId) {
+    var n = v24Norm(name);
+    if (!n || n.length < 3) return "short";
+    if (v24Reserved(n)) return "reserved";
+    if (v24OnAuction(n, selfId)) return "auction";
+    try { if (v24TakenBase(n, selfId)) return "taken"; } catch (e) {}
+    return "free";
+  }
+
+  function v24Text(why, n) {
+    if (why === "short") return "3-20 символов: латиница, цифры, подчёркивание";
+    if (why === "reserved") return "@" + n + " зарезервирован банком";
+    if (why === "auction") return "@" + n + " выставлен на аукционе - его нужно купить";
+    if (why === "taken") return "@" + n + " уже занят";
+    return "@" + n + " свободен";
+  }
+
+  /* живая проверка в регистрации */
+  v19CheckUser = function (name) {
+    var h = document.getElementById("regUserHint");
+    var n = v24Norm(name);
+    var why = v24Why(n, null);
+    if (!h) return;
+    h.textContent = v24Text(why, n);
+    h.className = "hint " + (why === "free" ? "v19-good v24-good" : why === "short" ? "" : "v19-bad v24-bad");
+    v19Reg.userOk = why === "free";
+    v19Reg.username = why === "free" ? n : "";
+  };
+
+  function v24RegPaint() {
+    var ui = document.getElementById("regUser");
+    if (!ui) return;
+    var raw = v24Norm(ui.value);
+    if (ui.value !== raw) ui.value = raw;
+    v19CheckUser(raw);
+  }
+
+  function v24Suggest() {
+    var base = "";
+    try {
+      var fn = document.getElementById("firstName"), ln = document.getElementById("lastName");
+      var src = ((fn && fn.value) || "") + ((ln && ln.value) ? ln.value.charAt(0) : "");
+      base = v24Norm(typeof v19Translit === "function" ? v19Translit(src) : src);
+    } catch (e) {}
+    if (base.length < 3) base = "slimuser";
+    if (v24Reserved(base)) base = base + "_" + Math.floor(Math.random() * 90 + 10);
+    var name = base, guard = 0;
+    while (v20NameTaken(name, null) && guard < 40) {
+      name = base + "_" + Math.floor(Math.random() * 9000 + 1000);
+      guard++;
+    }
+    return name;
+  }
+
+  /* предзаполняем юзернейм, чтобы старый v19-сторож не блокировал кнопку */
+  function v24Prefill(force) {
+    var ui = document.getElementById("regUser");
+    if (!ui) return;
+    var cur = v24Norm(ui.value);
+    if (!force && cur.length >= 3 && !v20NameTaken(cur, null)) { v24RegPaint(); return; }
+    if (cur.length >= 3 && !v20NameTaken(cur, null)) { v24RegPaint(); return; }
+    ui.value = v24Suggest();
+    v24RegPaint();
+  }
+
+  function v24Guard() {
+    var form = document.getElementById("regForm");
+    if (!form || form.dataset.v24 === "1") return;
+    form.dataset.v24 = "1";
+    form.addEventListener("submit", function (e) {
+      var pane = form.querySelector(".step:not(.hidden)");
+      var n = pane ? pane.getAttribute("data-pane") : "";
+      if (n !== "4") { v24Prefill(false); return; }
+      var wrap = document.getElementById("v23IdWrap");
+      if (!wrap || wrap.classList.contains("hidden")) return;
+      var ui = document.getElementById("regUser");
+      if (!ui) return;
+      var why = v24Why(ui.value, null);
+      if (why !== "free") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        v24RegPaint();
+        try { ui.focus(); } catch (e2) {}
+        try { v19Toast("Нужен свободный юзернейм", v24Text(why, v24Norm(ui.value))); } catch (e3) {}
+        return;
+      }
+      v19Reg.userOk = true;
+      v19Reg.username = v24Norm(ui.value);
+      v24Pending = v24Norm(ui.value);
+      v24PendAv = v19Reg.avatar || v24PendAv;
+      v24PendBn = v19Reg.banner || v24PendBn;
+    }, true);
+
+    form.addEventListener("input", function (e) {
+      var t = e.target;
+      if (t && t.id === "regUser") setTimeout(v24RegPaint, 10);
+    }, true);
+  }
+
+  /* ---------- Supabase: регистрация нового аккаунта ---------- */
+  var v24LastId = null, v24SrvAt = 0, v24Tries = 0;
+  var v24Pending = "", v24PendAv = "", v24PendBn = "";
+
+  function v24FinishAccount(u) {
+    if (!u) return false;
+    var changed = false;
+    if (!u.username && v24Pending && !v24TakenBase(v24Pending, String(u.id))) {
+      u.username = v24Pending;
+      changed = true;
+    }
+    if (!u.avatar && v24PendAv) { u.avatar = v24PendAv; changed = true; }
+    if (!u.banner && v24PendBn) { u.banner = v24PendBn; changed = true; }
+    if (!changed) return false;
+    try { saveUser(u); } catch (e) {}
+    try { render(u, false); } catch (e2) {}
+    try { if (typeof v19PaintProfile === "function") v19PaintProfile(u); } catch (e3) {}
+    try { if (typeof v21Refresh === "function") v21Refresh(); } catch (e4) {}
+    v24Pending = "";
+    return true;
+  }
+
+  function v24ServerRegister(u, dropToken) {
+    var srv = window.SlimServer;
+    if (!srv || !u || !u.id) return;
+    if (typeof srv.register !== "function") { if (srv.syncNow) srv.syncNow(true); return; }
+    if (dropToken) { try { localStorage.removeItem("slimbank_token_v2"); } catch (e) {} }
+    srv.loginId = String(u.id);
+    srv.register(u).then(function (r) {
+      if (r && r.ok) {
+        if (typeof srv.claimUsername === "function" && u.username) {
+          try { srv.claimUsername(u.username); } catch (e2) {}
+        }
+        if (srv.syncNow) srv.syncNow(true);
+        return null;
+      }
+      if (r && r.error === "exists" && typeof srv.signIn === "function") {
+        return srv.signIn(String(u.id), String(u.pass || "")).then(function () {
+          if (srv.syncNow) srv.syncNow(true);
+        });
+      }
+      return null;
+    }).catch(function () {});
+  }
+
+  function v24ServerWatch() {
+    var srv = window.SlimServer;
+    var u = null;
+    try { u = current; } catch (e) {}
+    if (!u || !u.id) return;
+    var id = String(u.id);
+    var fresh = u.createdAt && (Date.now() - u.createdAt) < 180000;
+    if (fresh) { try { v24FinishAccount(u); } catch (eF) {} }
+    if (v24LastId !== id) {
+      v24LastId = id;
+      v24Tries = 0;
+      if (fresh && srv) { v24SrvAt = Date.now(); v24ServerRegister(u, true); return; }
+    }
+    if (!srv || !u.pass) return;
+    var noToken = typeof srv.hasToken === "function" ? !srv.hasToken() : false;
+    if (!noToken || v24Tries > 8) return;
+    if (Date.now() - v24SrvAt < 9000) return;
+    v24SrvAt = Date.now();
+    v24Tries++;
+    v24ServerRegister(u, false);
+  }
+
+  /* ---------- apple emoji: полный обход текста ---------- */
+  var V24_CDN = [
+    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/",
+    "https://unpkg.com/emoji-datasource-apple@15.1.2/img/apple/64/",
+    "https://cdn.jsdelivr.net/npm/emoji-datasource-apple@14.0.0/img/apple/64/"
+  ];
+  var V24_SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, CODE: 1, PRE: 1, OPTION: 1, SELECT: 1, svg: 1 };
+
+  function v24Emoji(ch) {
+    var code = v23Code(ch);
+    if (!code) return null;
+    var img = document.createElement("img");
+    var tri = 0;
+    img.className = "v23-em v24-em";
+    img.alt = ch;
+    img.draggable = false;
+    img.loading = "lazy";
+    img.src = V24_CDN[0] + code + ".png";
+    img.onerror = function () {
+      tri++;
+      if (tri < V24_CDN.length) { img.src = V24_CDN[tri] + code + ".png"; return; }
+      if (img.parentNode) img.parentNode.replaceChild(document.createTextNode(ch), img);
+    };
+    return img;
+  }
+
+  function v24Has(txt) {
+    if (!txt) return false;
+    var i, c;
+    for (i = 0; i < txt.length; i++) {
+      c = txt.charCodeAt(i);
+      if (c >= 0xd800 && c <= 0xdbff) return true;
+      if (c >= 0x2190 && c <= 0x3299) return true;
+    }
+    return false;
+  }
+
+  function v24Split(txt) {
+    var re = /(?:\u00a9|\u00ae|[\u203c-\u3299]|[\ud800-\udbff][\udc00-\udfff])(?:\ufe0f|\u20e3)?(?:\u200d(?:[\ud800-\udbff][\udc00-\udfff]|[\u2600-\u27bf])\ufe0f?)*/g;
+    var parts = [], last = 0, m;
+    while ((m = re.exec(txt)) !== null) {
+      if (m[0] === "\u00a9" || m[0] === "\u00ae") continue;
+      if (m.index > last) parts.push({ t: txt.slice(last, m.index) });
+      parts.push({ e: m[0] });
+      last = m.index + m[0].length;
+    }
+    if (!parts.length) return null;
+    if (last < txt.length) parts.push({ t: txt.slice(last) });
+    return parts;
+  }
+
+  function v24Walk(root) {
+    if (!root || !root.ownerDocument && root.nodeType !== 9 && root.nodeType !== 1) return 0;
+    var walker = document.createTreeWalker(root, 4, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || n.nodeValue.length > 600) return 2;
+        var p = n.parentNode;
+        if (!p || !p.tagName) return 2;
+        if (V24_SKIP[p.tagName] || V24_SKIP[p.tagName.toLowerCase()]) return 2;
+        if (p.closest && p.closest("svg,script,style,textarea,#artStore")) return 2;
+        if (!v24Has(n.nodeValue)) return 2;
+        return 1;
+      }
+    });
+    var todo = [], n, done = 0;
+    while ((n = walker.nextNode()) && todo.length < 600) todo.push(n);
+    for (var i = 0; i < todo.length; i++) {
+      var node = todo[i];
+      if (!node.parentNode) continue;
+      var parts = v24Split(node.nodeValue);
+      if (!parts) continue;
+      var frag = document.createDocumentFragment(), any = false;
+      for (var j = 0; j < parts.length; j++) {
+        if (parts[j].t !== undefined) { frag.appendChild(document.createTextNode(parts[j].t)); continue; }
+        var img = v24Emoji(parts[j].e);
+        if (img) { frag.appendChild(img); any = true; }
+        else frag.appendChild(document.createTextNode(parts[j].e));
+      }
+      if (any) { node.parentNode.replaceChild(frag, node); done++; }
+    }
+    return done;
+  }
+
+  function v24Emojify() {
+    try { return v24Walk(document.body); } catch (e) { return 0; }
+  }
+
+  function v24Init() {
+    try { v24Guard(); } catch (e) {}
+    try { v24Prefill(false); } catch (e) {}
+    try { v24ServerWatch(); } catch (e) {}
+    try { v24Emojify(); } catch (e) {}
+  }
+
+  window.__v24 = {
+    init: v24Init,
+    emojify: v24Emojify,
+    why: v24Why,
+    taken: v20NameTaken,
+    reserved: v24Reserved,
+    auction: v24OnAuction,
+    suggest: v24Suggest,
+    server: v24ServerRegister
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v24Init);
+  setTimeout(v24Init, 160);
+  setTimeout(v24Init, 1300);
+  setInterval(function () { try { v24Emojify(); v24ServerWatch(); } catch (e) {} }, 1500);
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
