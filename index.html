@@ -2778,6 +2778,212 @@ h1,h2{letter-spacing:-1.1px}
 .pm-card::after{content:"";position:absolute;left:-40%;top:-120%;width:36%;height:340%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.24),transparent);transform:rotate(18deg);animation:pmShine 4.6s ease-in-out infinite}
 @keyframes pmShine{0%,70%{left:-40%}100%{left:130%}}
 </style>
+
+<style id="v22css">
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Inter+Tight:wght@600;700;800;900&display=swap');
+
+:root, body, body.dark, body.light {
+  --display:'Inter Tight','Inter','Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  --sans:'Inter','Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif !important;
+  --text:#F3F4F6 !important;
+  --text2:#8A9099 !important;
+  --canvas:#000000 !important;
+  --soft:#08080A !important;
+  --surface:#0C0D10 !important;
+  --surface2:#101216 !important;
+  --border:#1C1F25 !important;
+  --line:#1C1F25 !important;
+  --blue:#3D8BFD !important;
+  --blue-ink:#7FB2FF !important;
+  --blue-soft:#0E1A2B !important;
+  --green:#34D27B !important;
+  --green-soft:#0B1F16 !important;
+  --orange:#F2A64B !important;
+  --orange-soft:#231705 !important;
+  --red:#F2685C !important;
+  --red-ink:#FF8C82 !important;
+  --red-soft:#241110 !important;
+  --purple:#A78BFA !important;
+  --purple-soft:#160F2B !important;
+  --sh-1:0 1px 2px rgba(0,0,0,.6), 0 6px 18px rgba(0,0,0,.45) !important;
+  --sh-2:0 4px 12px rgba(0,0,0,.55), 0 22px 55px rgba(0,0,0,.6) !important;
+  --sh-card:0 22px 50px rgba(0,0,0,.75) !important;
+  --sh-soft:0 2px 8px rgba(0,0,0,.5),0 16px 38px -14px rgba(0,0,0,.7) !important;
+  --sh-hi:0 6px 16px rgba(0,0,0,.55),0 34px 70px -22px rgba(0,0,0,.8) !important;
+  --ring:0 0 0 1px rgba(255,255,255,.06) !important;
+  --lift:0 34px 70px -34px rgba(0,0,0,.9) !important;
+  --glow:0 20px 54px -20px rgba(61,139,253,.5) !important;
+}
+
+html, body, body.dark, body.light, body.band-soft, .band-soft, #app, main, .page, .shell {
+  background:#000 !important;
+  color:var(--text) !important;
+}
+body { font-family:var(--sans) !important; font-feature-settings:'ss01','cv11','tnum' 0; letter-spacing:-.01em; }
+h1,h2,h3,h4,.logo,.balance,.stat b,.kpi b { font-family:var(--display) !important; letter-spacing:-.032em !important; font-weight:800 !important; }
+h1 { font-weight:900 !important; }
+.pr-id h3 { font-weight:800 !important; letter-spacing:-.035em !important; }
+
+/* поверхности */
+.card, .panel, .form-card, .plan, .ticker, .dash-tabs, .v19-card, .tile, .biz-card, .asset-card,
+.realty-card, .inv-card, .casino-card, .giftcard, .pm-card, .lot, .v19-lot, .sn-wrap, .side-nav,
+body.dark .card, body.dark .panel, body.dark .form-card, body.dark .plan {
+  background:#0B0C0F !important;
+  border-color:#1B1E24 !important;
+  box-shadow:0 1px 0 rgba(255,255,255,.03), 0 22px 48px -26px #000 !important;
+}
+.panel-head, .band-soft, .soft, .pr-stat, .pr-row, .v19-li, .v19-stat {
+  background:#0E1013 !important;
+  border-color:#1B1E24 !important;
+}
+#siteHeader, #siteHeader.scrolled {
+  background:rgba(0,0,0,.72) !important;
+  backdrop-filter:blur(18px) saturate(140%);
+  border-color:#16181D !important;
+}
+input, select, textarea, .field input, .field select, .field textarea, .v19-in, .pm-input, .un-input {
+  background:#101216 !important;
+  color:var(--text) !important;
+  border-color:#23262D !important;
+  transition:border-color .2s, box-shadow .25s, background .2s !important;
+}
+input:focus, select:focus, textarea:focus, .v19-in:focus {
+  border-color:#3D8BFD !important;
+  box-shadow:0 0 0 4px rgba(61,139,253,.16) !important;
+  background:#12151A !important;
+  outline:none !important;
+}
+input::placeholder, textarea::placeholder { color:#5A6069 !important; }
+.hero { background:radial-gradient(130% 100% at 72% -10%, #101A28 0%, #05070A 52%, #000 100%) !important; }
+.pr-cover { background:linear-gradient(118deg,#0B1C33,#1B4C86 42%,#5B3FB0 100%) !important; }
+.pr-avatar { box-shadow:0 0 0 5px #000, 0 20px 40px -18px #000 !important; }
+
+/* кнопки */
+.btn, .v19-b, .v19-chip, .v21-buy, .v21-up, .v19-upload, .keypad button, .sn-item, .tabs button, .dash-tabs button {
+  transition:transform .22s cubic-bezier(.22,1,.36,1), box-shadow .24s, background .22s, color .18s, border-color .2s !important;
+  will-change:transform;
+}
+.btn:hover, .v19-b:hover, .v21-buy:hover, .v21-up:hover, .v19-upload:hover { transform:translateY(-2px) !important; }
+.btn:active, .v19-b:active, .v21-buy:active, .v19-chip:active { transform:translateY(0) scale(.97) !important; }
+.btn-primary {
+  background:linear-gradient(135deg,#3D8BFD,#6F5BFF 60%,#9B5BFF) !important;
+  color:#fff !important;
+  border:0 !important;
+  box-shadow:0 12px 30px -12px rgba(61,139,253,.7) !important;
+}
+.btn-primary:hover { box-shadow:0 20px 42px -14px rgba(111,91,255,.75) !important; }
+.btn-ghost, body.dark .btn-ghost {
+  background:#12141A !important;
+  color:var(--text) !important;
+  border:1px solid #23262D !important;
+  box-shadow:none !important;
+}
+.btn-ghost:hover, body.dark .btn-ghost:hover { background:#171A21 !important; color:#9CC4FF !important; border-color:#2C3140 !important; }
+.keypad button { background:#0F1116 !important; border-color:#23262D !important; color:#fff !important; }
+.keypad button:hover { background:#161A21 !important; }
+.pill, .v19-chip { background:#12141A !important; border-color:#23262D !important; color:var(--text) !important; }
+.pill.gold { background:linear-gradient(135deg,#F5D68A,#C89A2C) !important; color:#231A05 !important; border:0 !important; }
+
+/* навигация */
+.sn-item { border-radius:14px !important; color:#9AA0A9 !important; position:relative; overflow:hidden; }
+.sn-item:hover { background:#12141A !important; color:#fff !important; transform:translateX(3px) !important; }
+.sn-item.active, .sn-item[aria-current="true"] {
+  background:linear-gradient(100deg,rgba(61,139,253,.22),rgba(155,91,255,.14)) !important;
+  color:#fff !important;
+}
+.sn-item.active:before {
+  content:''; position:absolute; left:0; top:18%; bottom:18%; width:3px; border-radius:3px;
+  background:linear-gradient(#3D8BFD,#9B5BFF); box-shadow:0 0 12px rgba(61,139,253,.8);
+}
+
+/* анимации */
+@keyframes v22in { from { opacity:0; transform:translateY(16px) scale(.994) } to { opacity:1; transform:none } }
+@keyframes v22fade { from { opacity:0 } to { opacity:1 } }
+@keyframes v22rise { from { opacity:0; transform:translateY(22px) } to { opacity:1; transform:none } }
+.tabpane:not(.hidden) { animation:v22in .5s cubic-bezier(.22,1,.36,1) both; }
+.tabpane:not(.hidden) > *:nth-child(1) { animation:v22rise .5s cubic-bezier(.22,1,.36,1) both .02s }
+.tabpane:not(.hidden) > *:nth-child(2) { animation:v22rise .5s cubic-bezier(.22,1,.36,1) both .07s }
+.tabpane:not(.hidden) > *:nth-child(3) { animation:v22rise .5s cubic-bezier(.22,1,.36,1) both .12s }
+.tabpane:not(.hidden) > *:nth-child(4) { animation:v22rise .5s cubic-bezier(.22,1,.36,1) both .17s }
+.card:hover, .v19-card:hover, .biz-card:hover, .asset-card:hover, .realty-card:hover, .giftcard:hover {
+  transform:translateY(-4px);
+  box-shadow:0 34px 68px -30px #000, 0 0 0 1px rgba(255,255,255,.06) !important;
+  transition:transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s !important;
+}
+.v19-ov { background:rgba(0,0,0,.74) !important; backdrop-filter:blur(14px) saturate(130%) !important; }
+.v19-mod { background:#0B0C0F !important; border:1px solid #1E2128 !important; box-shadow:0 40px 90px -30px #000 !important; }
+
+/* скроллбар */
+* { scrollbar-color:#23262D #000; scrollbar-width:thin; }
+*::-webkit-scrollbar { width:10px; height:10px; }
+*::-webkit-scrollbar-track { background:#000; }
+*::-webkit-scrollbar-thumb { background:#22252C; border-radius:8px; border:2px solid #000; }
+*::-webkit-scrollbar-thumb:hover { background:#2E323A; }
+::selection { background:rgba(61,139,253,.35); color:#fff; }
+
+/* галочка в имени */
+.pr-id h3 .v21-tick { vertical-align:-2px; margin-left:8px; }
+.pr-user .v21-tick { display:none !important; }
+</style>
+
+<style id="v23css">
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&family=Golos+Text:wght@400;500;600;700;800;900&display=swap');
+
+:root, body, body.dark, body.light {
+  --display:'Onest','Golos Text','Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif !important;
+  --sans:'Golos Text','Onest','Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,sans-serif !important;
+}
+body {
+  font-family:var(--sans) !important;
+  font-weight:450;
+  letter-spacing:-.005em;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3,h4,.logo,.balance,.stat b,.kpi b,.plan .price,.pr-id h3,.v19-h b,.hero-stats div strong {
+  font-family:var(--display) !important;
+  letter-spacing:-.028em !important;
+}
+h1 { font-weight:800 !important; letter-spacing:-.035em !important; }
+h2,h3 { font-weight:700 !important; }
+h4, .v19-h b { font-weight:700 !important; }
+.pr-id h3 { font-weight:800 !important; font-size:26px !important; }
+.btn, button, input, select, textarea, .v19-b, .v21-buy, .pill, .sn-item {
+  font-family:var(--sans) !important;
+  font-weight:600 !important;
+  letter-spacing:-.008em !important;
+}
+.balance, .cc-num, .kpi b, .stat b, .v19-lot .t { font-variant-numeric:tabular-nums; }
+.muted, .hint, .v19-sub, .v19-who, .pr-user { font-weight:500 !important; }
+
+/* эмодзи apple */
+.v23-em { display:inline-block; width:1em; height:1em; vertical-align:-.16em; }
+.v19-av .v23-em, .v19-pi .v23-em { width:36px; height:36px; vertical-align:middle;
+  filter:drop-shadow(0 3px 7px rgba(0,0,0,.45)); }
+.pr-avatar .v23-em, #v20AvSkin .v23-em { width:52%; height:52%; }
+.v21-perk .v23-em { width:19px; height:19px; }
+
+/* шаг выбора аватара в регистрации */
+#v23IdWrap { animation:v23slide .55s cubic-bezier(.22,1,.36,1) both; }
+@keyframes v23slide { from { opacity:0; transform:translateY(26px) } to { opacity:1; transform:none } }
+#v23IdWrap .v23-head { display:flex; align-items:center; gap:12px; margin:2px 0 16px; }
+#v23IdWrap .v23-head .ic {
+  width:40px; height:40px; border-radius:14px; flex:none; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#3D8BFD,#9B5BFF); box-shadow:0 12px 26px -12px rgba(61,139,253,.8);
+}
+#v23IdWrap .v23-head b { font-family:var(--display); font-size:18px; letter-spacing:-.03em; display:block; }
+#v23IdWrap .v23-head span { font-size:13px; opacity:.62; }
+#v23IdWrap .v19-idbox { animation:none; }
+.v23-okline {
+  display:flex; align-items:center; gap:10px; padding:13px 16px; border-radius:15px; margin-bottom:16px;
+  background:linear-gradient(100deg,rgba(52,210,123,.16),rgba(52,210,123,.05));
+  border:1px solid rgba(52,210,123,.28); font-size:13.5px; font-weight:600;
+}
+.v23-okline i { width:20px; height:20px; flex:none; border-radius:50%; background:#34D27B;
+  background-image:url(data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='%23071b10'%3E%3Cpath%20d='M9.6%2016.2%205.4%2012l1.4-1.4%202.8%202.8%207-7L18%207.8z'/%3E%3C/svg%3E);
+  background-size:15px; background-position:center; background-repeat:no-repeat; }
+</style>
 </head>
 <body>
 <header id="siteHeader">
@@ -11135,7 +11341,8 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
       el.insertBefore(txt, el.firstChild);
       if (pen) el.appendChild(pen);
     }
-    txt.innerHTML = "@" + v20Esc(name || "slimuser") + (u.verified ? v21TickSvg(19) : "");
+    txt.innerHTML = "@" + v20Esc(name || "slimuser");
+    v22NameTick(u);
   }
 
   function v21EditUser() {
@@ -11511,6 +11718,213 @@ try { window.ic = ic; window.icTicker = icTicker; window.ICON_PATHS = ICON_PATHS
   setTimeout(v21Init, 1600);
   setInterval(function () { try { v21Refresh(); } catch (e) {} }, 1200);
   setInterval(function () { try { v21FetchLots(); } catch (e) {} }, 15000);
+
+
+  /* ================= v22: чёрная тема, галочка в имени ================= */
+  function v22NameTick(u) {
+    var h3 = document.getElementById("prName");
+    if (!h3) return;
+    var old = h3.querySelector(".v21-tick");
+    if (u && u.verified) {
+      if (!old) {
+        var sp = document.createElement("span");
+        sp.innerHTML = v21TickSvg(21);
+        h3.appendChild(sp.firstChild);
+      }
+    } else if (old && old.parentNode) {
+      old.parentNode.removeChild(old);
+    }
+    var pu = document.getElementById("prUser");
+    if (pu) {
+      var bad = pu.querySelectorAll(".v21-tick"), i;
+      for (i = 0; i < bad.length; i++) if (bad[i].parentNode) bad[i].parentNode.removeChild(bad[i]);
+    }
+  }
+
+  function v22Dark() {
+    try {
+      document.body.classList.add("dark");
+      document.body.classList.remove("light");
+      document.documentElement.style.background = "#000";
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("slimbank_theme_v1", "dark");
+    } catch (e) {}
+  }
+
+  function v22Init() {
+    v22Dark();
+    try { v22NameTick(current); } catch (e) {}
+  }
+
+  window.__v22 = { dark: v22Dark, tick: v22NameTick };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v22Init);
+  setTimeout(v22Init, 60);
+  setTimeout(v22Init, 900);
+  setInterval(v22Init, 1500);
+
+
+  /* ============ v23: apple-эмодзи + выбор аватара после SMS ============ */
+  var V23_CDN = "https://cdn.jsdelivr.net/npm/emoji-datasource-apple@15.1.2/img/apple/64/";
+  var V23_RE = /(?:[\uD800-\uDBFF][\uDC00-\uDFFF](?:\uFE0F)?(?:\u200D[\uD800-\uDBFF][\uDC00-\uDFFF])*|[\u2190-\u2BFF\u2600-\u27BF]\uFE0F?)/g;
+
+  function v23Code(str) {
+    var out = [], i = 0, cp;
+    while (i < str.length) {
+      cp = str.codePointAt(i);
+      i += cp > 0xffff ? 2 : 1;
+      if (cp === 0xfe0f || cp === 0x200d) continue;
+      out.push(cp.toString(16));
+    }
+    return out.join("-");
+  }
+
+  function v23Img(ch) {
+    var code = v23Code(ch);
+    if (!code) return null;
+    var img = document.createElement("img");
+    img.className = "v23-em";
+    img.alt = ch;
+    img.draggable = false;
+    img.src = V23_CDN + code + ".png";
+    img.onerror = function () {
+      var t = document.createTextNode(ch);
+      if (img.parentNode) img.parentNode.replaceChild(t, img);
+    };
+    return img;
+  }
+
+  function v23Node(node) {
+    var txt = node.nodeValue;
+    if (!txt || !V23_RE.test(txt)) return;
+    V23_RE.lastIndex = 0;
+    var frag = document.createDocumentFragment();
+    var last = 0, m, any = false;
+    while ((m = V23_RE.exec(txt)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(txt.slice(last, m.index)));
+      var img = v23Img(m[0]);
+      if (img) { frag.appendChild(img); any = true; }
+      else frag.appendChild(document.createTextNode(m[0]));
+      last = m.index + m[0].length;
+    }
+    if (last < txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
+    if (any && node.parentNode) node.parentNode.replaceChild(frag, node);
+  }
+
+  function v23Scan(root) {
+    if (!root || !root.querySelectorAll) return;
+    var sels = ".v19-av span,.v19-pi,.v21-perk i,.pr-tag,.v23-emo,.gift-emo,.pr-gift span,.v19-av";
+    var list = root.querySelectorAll(sels), i, j;
+    for (i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.dataset.v23 === "1") continue;
+      el.dataset.v23 = "1";
+      var kids = [], n;
+      for (j = 0; j < el.childNodes.length; j++) {
+        n = el.childNodes[j];
+        if (n.nodeType === 3) kids.push(n);
+      }
+      for (j = 0; j < kids.length; j++) v23Node(kids[j]);
+    }
+  }
+
+  function v23Emojify() {
+    try { v23Scan(document.body); } catch (e) {}
+  }
+
+  /* ---------- шаг выбора аватара после кода из SMS ---------- */
+  function v23Pane4() {
+    return document.querySelector('#regForm .step[data-pane="4"]');
+  }
+
+  function v23MoveIdentity() {
+    var pane = v23Pane4();
+    if (!pane || document.getElementById("v23IdWrap")) return;
+    if (!document.getElementById("regUser")) {
+      try { v19BuildIdentity(); } catch (e) {}
+    }
+    var box = document.querySelector("#regForm .v19-idbox");
+    if (!box) return;
+    var wrap = document.createElement("div");
+    wrap.id = "v23IdWrap";
+    wrap.className = "hidden";
+    wrap.innerHTML =
+      '<div class="v23-okline"><i></i><span>Номер подтверждён</span></div>' +
+      '<div class="v23-head"><span class="ic">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5S20 17 20 21"/></svg></span>' +
+      '<span><b>Оформим профиль</b><span>Выберите юзернейм, аватар и баннер</span></span></div>';
+    wrap.appendChild(box);
+    pane.appendChild(wrap);
+    v23Emojify();
+  }
+
+  function v23CodeFull() {
+    var i, v = "";
+    for (i = 1; i <= 4; i++) {
+      var el = document.getElementById("code" + i);
+      if (!el) return false;
+      v += String(el.value || "").replace(/\D/g, "");
+    }
+    return v.length === 4;
+  }
+
+  function v23Reveal() {
+    var wrap = document.getElementById("v23IdWrap");
+    var pane = v23Pane4();
+    if (!wrap || !pane) return;
+    var full = v23CodeFull();
+    var field = document.getElementById("codeField");
+    var alert4 = document.getElementById("smsAlert");
+    var resend = document.getElementById("resendCode");
+    if (full && wrap.classList.contains("hidden")) {
+      wrap.classList.remove("hidden");
+      wrap.style.animation = "none";
+      void wrap.offsetWidth;
+      wrap.style.animation = "";
+      if (field) field.classList.add("hidden");
+      if (alert4) alert4.classList.add("hidden");
+      if (resend) resend.classList.add("hidden");
+      var t = document.getElementById("formTitle");
+      if (t) t.textContent = "Аватар и юзернейм";
+      v23Emojify();
+      var ru = document.getElementById("regUser");
+      if (ru) { try { ru.focus(); } catch (e) {} }
+    } else if (!full && !wrap.classList.contains("hidden")) {
+      wrap.classList.add("hidden");
+      if (field) field.classList.remove("hidden");
+      if (alert4) alert4.classList.remove("hidden");
+      if (resend) resend.classList.remove("hidden");
+    }
+  }
+
+  function v23HookCode() {
+    if (window.__v23code) return;
+    window.__v23code = true;
+    var i;
+    for (i = 1; i <= 4; i++) {
+      var el = document.getElementById("code" + i);
+      if (!el) continue;
+      el.addEventListener("input", function () { setTimeout(v23Reveal, 30); });
+      el.addEventListener("keyup", function () { setTimeout(v23Reveal, 30); });
+    }
+    var pane = v23Pane4();
+    if (pane) {
+      pane.addEventListener("click", function () { setTimeout(v23Emojify, 40); });
+    }
+  }
+
+  function v23Init() {
+    try { v23MoveIdentity(); } catch (e) {}
+    try { v23HookCode(); } catch (e) {}
+    try { v23Reveal(); } catch (e) {}
+    try { v23Emojify(); } catch (e) {}
+  }
+
+  window.__v23 = { init: v23Init, emojify: v23Emojify, reveal: v23Reveal, code: v23Code };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", v23Init);
+  setTimeout(v23Init, 140);
+  setTimeout(v23Init, 1200);
+  setInterval(function () { try { v23Emojify(); } catch (e) {} }, 1400);
 
   /* v19: самозапуск внутри основного скрипта */
   function v19Boot() {
